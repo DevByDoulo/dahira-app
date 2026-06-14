@@ -29,7 +29,8 @@ app.use('/api/auth', require('./modules/auth/auth.routes'));
 // Routes API protégées (auth + tenant middleware globaux)
 // À ajouter plus tard pour les autres modules:
 // app.use('/api/dahiras', authMiddleware, tenantMiddleware, require('./modules/dahiras/dahiras.routes'));
-// app.use('/api/membres', authMiddleware, tenantMiddleware, require('./modules/membres/membres.routes'));
+app.use('/api/membres', require('./modules/membres/membres.routes'));
+app.use('/api/users', require('./modules/users/users.routes'));
 // etc.
 
 // Middleware de gestion des erreurs (doit être à la fin)
