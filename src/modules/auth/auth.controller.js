@@ -49,8 +49,10 @@ const loginValidation = [
 const changePasswordValidation = [
   body('ancien_password').notEmpty().withMessage('L\'ancien mot de passe est requis'),
   body('nouveau_password')
-    .isLength({ min: 6 })
-    .withMessage('Le nouveau mot de passe doit contenir au moins 6 caractères')
+    .isLength({ min: 8 })
+    .withMessage('Le nouveau mot de passe doit contenir au moins 8 caractères')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre')
 ];
 
 module.exports = {

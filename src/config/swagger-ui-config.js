@@ -30,8 +30,24 @@ const swaggerUiConfig = {
       border-bottom: 2px solid #e2e8f0;
       padding: 1rem 0;
     }
-    .swagger-ui .opblock-tag:hover { 
-      background-color: #f7fafc;
+    .swagger-ui .opblock-tag-section .description {
+      background-color: rgba(255, 255, 255, 0.05) !important;
+      color: #b0b0b0 !important;
+    }
+    .swagger-ui .opblock-tag-section .opblock-tag small,
+    .swagger-ui .opblock-tag small {
+      color: #1a1a1a !important;
+    }
+    .swagger-ui .opblock-tag:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+    .swagger-ui .opblock-tag:hover,
+    .swagger-ui .opblock-tag:hover span,
+    .swagger-ui .opblock-tag:hover small {
+      color: #e0e0e0 !important;
+    }
+    .swagger-ui .opblock-tag:hover svg path {
+      fill: #e0e0e0 !important;
     }
     .swagger-ui .opblock .opblock-summary-method { 
       font-weight: bold;
