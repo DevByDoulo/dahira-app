@@ -26,7 +26,7 @@ const { ROLES } = require('../../constants/roles');
  *   get:
  *     summary: Lister tous les événements
  *     description: Retourne la liste de tous les événements du dahira avec nombre d'inscrits et statut d'inscription de l'utilisateur
- *     tags: [Evenements]
+ *     tags: [Événements]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -94,7 +94,7 @@ router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES
  *   get:
  *     summary: Obtenir un événement par ID
  *     description: Retourne les détails d'un événement spécifique avec nombre d'inscrits et statut d'inscription
- *     tags: [Evenements]
+ *     tags: [Événements]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -169,7 +169,7 @@ router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, RO
  *   post:
  *     summary: Créer un nouvel événement
  *     description: Crée un nouvel événement dans le dahira
- *     tags: [Evenements]
+ *     tags: [Événements]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -262,7 +262,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), cre
  *   put:
  *     summary: Mettre à jour un événement
  *     description: Met à jour les informations d'un événement existant
- *     tags: [Evenements]
+ *     tags: [Événements]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -364,7 +364,7 @@ router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), u
  *   delete:
  *     summary: Supprimer un événement
  *     description: Supprime un événement existant (CASCADE supprime aussi les participations)
- *     tags: [Evenements]
+ *     tags: [Événements]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -406,7 +406,7 @@ router.delete('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU)
  *   post:
  *     summary: S'inscrire / Se désinscrire d'un événement
  *     description: Toggle l'inscription du membre connecté à l'événement
- *     tags: [Evenements]
+ *     tags: [Événements]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -450,7 +450,7 @@ router.post('/:id/inscription', authMiddleware, tenantMiddleware, allowRoles(ROL
  *   get:
  *     summary: Lister les participants d'un événement
  *     description: Retourne la liste des participants (inscrits ou présents) avec leur statut
- *     tags: [Evenements]
+ *     tags: [Événements]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -507,7 +507,7 @@ router.get('/:id/participants', authMiddleware, tenantMiddleware, allowRoles(ROL
  *   patch:
  *     summary: Marquer la présence d'un membre
  *     description: Met à jour le statut de présence d'un membre pour un événement
- *     tags: [Evenements]
+ *     tags: [Événements]
  *     security:
  *       - bearerAuth: []
  *     parameters:

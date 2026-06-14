@@ -1,18 +1,54 @@
 // Initialisation Express + middlewares globaux
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 require('dotenv').config();
 
 const app = express();
 
-// Middlewares globaux
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middleware de sécurité Helmet
+app.use(helmet());
+
+// Configuration CORS avec origines spécifiques
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// Rate limiting pour prévenir les attaques brute force
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limite chaque IP à 100 requêtes par windowMs
+  message: 'Trop de requêtes, veuillez réessayer plus tard'
+});
+app.use('/api/', limiter);
+
+// Rate limiting plus strict pour l'authentification
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limite chaque IP à 5 tentatives de connexion par 15 minutes
+  message: 'Trop de tentatives de connexion, veuillez réessayer plus tard'
+});
+
+// Middlewares globaux avec limites de taille
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Servir le dossier /uploads en statique
 app.use('/uploads', express.static('uploads'));
+
+// Endpoint de health check
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
 
 // Import middlewares
 const authMiddleware = require('./middlewares/auth.middleware');
@@ -25,6 +61,7 @@ const swaggerUiConfig = require('./config/swagger-ui-config');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiConfig));
 
 // Routes auth (login est public, autres endpoints nécessitent auth)
+app.use('/api/auth/login', authLimiter, require('./modules/auth/auth.routes'));
 app.use('/api/auth', require('./modules/auth/auth.routes'));
 
 // Routes publiques
