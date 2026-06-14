@@ -18,6 +18,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const allowRoles = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 /**
  * @swagger
@@ -115,7 +116,7 @@ const allowRoles = require('../../middlewares/role.middleware');
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/encaisser', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), encaisserCotisationValidation, encaisserCotisationController);
+router.post('/encaisser', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), encaisserCotisationValidation, encaisserCotisationController);
 
 /**
  * @swagger
@@ -189,7 +190,7 @@ router.post('/encaisser', authMiddleware, tenantMiddleware, allowRoles('bureau',
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/encaisser/batch', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), encaisserCotisationsBatchValidation, encaisserCotisationsBatchController);
+router.post('/encaisser/batch', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), encaisserCotisationsBatchValidation, encaisserCotisationsBatchController);
 
 /**
  * @swagger
@@ -285,7 +286,7 @@ router.post('/encaisser/batch', authMiddleware, tenantMiddleware, allowRoles('bu
  *       404:
  *         description: Séance non trouvée
  */
-router.post('/declarer', authMiddleware, tenantMiddleware, allowRoles('membre', 'tresorier', 'bureau'), declarerCotisationValidation, declarerCotisationController);
+router.post('/declarer', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), declarerCotisationValidation, declarerCotisationController);
 
 /**
  * @swagger
@@ -368,7 +369,7 @@ router.post('/declarer', authMiddleware, tenantMiddleware, allowRoles('membre', 
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/pending', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), getPendingCotisationsController);
+router.get('/pending', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getPendingCotisationsController);
 
 /**
  * @swagger
@@ -421,7 +422,7 @@ router.get('/pending', authMiddleware, tenantMiddleware, allowRoles('bureau', 't
  *       404:
  *         description: Cotisation non trouvée
  */
-router.patch('/:id/valider', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), validerCotisationController);
+router.patch('/:id/valider', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), validerCotisationController);
 
 /**
  * @swagger
@@ -486,7 +487,7 @@ router.patch('/:id/valider', authMiddleware, tenantMiddleware, allowRoles('burea
  *       404:
  *         description: Cotisation non trouvée
  */
-router.patch('/:id/rejeter', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), rejeterCotisationValidation, rejeterCotisationController);
+router.patch('/:id/rejeter', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), rejeterCotisationValidation, rejeterCotisationController);
 
 /**
  * @swagger
@@ -561,7 +562,7 @@ router.patch('/:id/rejeter', authMiddleware, tenantMiddleware, allowRoles('burea
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/mine', authMiddleware, tenantMiddleware, allowRoles('membre', 'tresorier', 'bureau'), getMesCotisationsController);
+router.get('/mine', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), getMesCotisationsController);
 
 /**
  * @swagger
@@ -626,6 +627,6 @@ router.get('/mine', authMiddleware, tenantMiddleware, allowRoles('membre', 'tres
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/dashboard', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), getDashboardValidation, getDashboardController);
+router.get('/dashboard', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getDashboardValidation, getDashboardController);
 
 module.exports = router;

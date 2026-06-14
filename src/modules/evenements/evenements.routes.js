@@ -18,6 +18,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const allowRoles = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 /**
  * @swagger
@@ -85,7 +86,7 @@ const allowRoles = require('../../middlewares/role.middleware');
  *       401:
  *         description: Non authentifié
  */
-router.get('/', authMiddleware, tenantMiddleware, allowRoles('membre', 'tresorier', 'bureau'), getAllEvenementsController);
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), getAllEvenementsController);
 
 /**
  * @swagger
@@ -160,7 +161,7 @@ router.get('/', authMiddleware, tenantMiddleware, allowRoles('membre', 'tresorie
  *       404:
  *         description: Événement non trouvé
  */
-router.get('/:id', authMiddleware, tenantMiddleware, allowRoles('membre', 'tresorier', 'bureau'), getEvenementByIdController);
+router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), getEvenementByIdController);
 
 /**
  * @swagger
@@ -253,7 +254,7 @@ router.get('/:id', authMiddleware, tenantMiddleware, allowRoles('membre', 'treso
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/', authMiddleware, tenantMiddleware, allowRoles('bureau'), createEvenementValidation, createEvenementController);
+router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), createEvenementValidation, createEvenementController);
 
 /**
  * @swagger
@@ -355,7 +356,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles('bureau'), createE
  *       404:
  *         description: Événement non trouvé
  */
-router.put('/:id', authMiddleware, tenantMiddleware, allowRoles('bureau'), updateEvenementValidation, updateEvenementController);
+router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), updateEvenementValidation, updateEvenementController);
 
 /**
  * @swagger
@@ -397,7 +398,7 @@ router.put('/:id', authMiddleware, tenantMiddleware, allowRoles('bureau'), updat
  *       404:
  *         description: Événement non trouvé
  */
-router.delete('/:id', authMiddleware, tenantMiddleware, allowRoles('bureau'), deleteEvenementController);
+router.delete('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), deleteEvenementController);
 
 /**
  * @swagger
@@ -441,7 +442,7 @@ router.delete('/:id', authMiddleware, tenantMiddleware, allowRoles('bureau'), de
  *       404:
  *         description: Événement non trouvé
  */
-router.post('/:id/inscription', authMiddleware, tenantMiddleware, allowRoles('membre', 'tresorier', 'bureau'), toggleInscriptionController);
+router.post('/:id/inscription', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), toggleInscriptionController);
 
 /**
  * @swagger
@@ -498,7 +499,7 @@ router.post('/:id/inscription', authMiddleware, tenantMiddleware, allowRoles('me
  *       404:
  *         description: Événement non trouvé
  */
-router.get('/:id/participants', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), getParticipantsController);
+router.get('/:id/participants', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getParticipantsController);
 
 /**
  * @swagger
@@ -572,6 +573,6 @@ router.get('/:id/participants', authMiddleware, tenantMiddleware, allowRoles('bu
  *       404:
  *         description: Événement ou membre non trouvé
  */
-router.patch('/:id/presence/:membre_id', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), updatePresenceValidation, updatePresenceController);
+router.patch('/:id/presence/:membre_id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), updatePresenceValidation, updatePresenceController);
 
 module.exports = router;

@@ -11,6 +11,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const allowRoles = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 /**
  * @swagger
@@ -69,7 +70,7 @@ const allowRoles = require('../../middlewares/role.middleware');
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/', authMiddleware, tenantMiddleware, allowRoles('bureau'), getAllUsersController);
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), getAllUsersController);
 
 /**
  * @swagger
@@ -158,7 +159,7 @@ router.get('/', authMiddleware, tenantMiddleware, allowRoles('bureau'), getAllUs
  *       404:
  *         description: Membre non trouvé (si membre_id fourni)
  */
-router.post('/', authMiddleware, tenantMiddleware, allowRoles('bureau'), createUserValidation, createUserController);
+router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), createUserValidation, createUserController);
 
 /**
  * @swagger
@@ -245,7 +246,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles('bureau'), createU
  *       404:
  *         description: Utilisateur ou membre non trouvé
  */
-router.put('/:id', authMiddleware, tenantMiddleware, allowRoles('bureau'), updateUserValidation, updateUserController);
+router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), updateUserValidation, updateUserController);
 
 /**
  * @swagger
@@ -308,6 +309,6 @@ router.put('/:id', authMiddleware, tenantMiddleware, allowRoles('bureau'), updat
  *       404:
  *         description: Utilisateur non trouvé
  */
-router.patch('/:id/desactiver', authMiddleware, tenantMiddleware, allowRoles('bureau'), desactiverUserController);
+router.patch('/:id/desactiver', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), desactiverUserController);
 
 module.exports = router;

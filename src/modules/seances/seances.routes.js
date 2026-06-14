@@ -11,6 +11,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const allowRoles = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 /**
  * @swagger
@@ -79,7 +80,7 @@ const allowRoles = require('../../middlewares/role.middleware');
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), createSeanceValidation, createSeanceController);
+router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), createSeanceValidation, createSeanceController);
 
 /**
  * @swagger
@@ -137,7 +138,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresori
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), getAllSeancesValidation, getAllSeancesController);
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getAllSeancesValidation, getAllSeancesController);
 
 /**
  * @swagger
@@ -188,7 +189,7 @@ router.get('/', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorie
  *       404:
  *         description: Aucune séance hebdomadaire en cours
  */
-router.get('/courante', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), getSeanceCouranteController);
+router.get('/courante', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getSeanceCouranteController);
 
 /**
  * @swagger
@@ -246,6 +247,6 @@ router.get('/courante', authMiddleware, tenantMiddleware, allowRoles('bureau', '
  *       404:
  *         description: Séance non trouvée
  */
-router.patch('/:id/cloturer', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), cloturerSeanceController);
+router.patch('/:id/cloturer', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), cloturerSeanceController);
 
 module.exports = router;

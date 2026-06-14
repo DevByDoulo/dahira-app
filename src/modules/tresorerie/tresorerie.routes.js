@@ -10,6 +10,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const roleMiddleware = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
@@ -32,7 +33,7 @@ router.use(tenantMiddleware);
  *       403:
  *         description: Accès refusé
  */
-router.get('/solde', roleMiddleware(['bureau', 'tresorier']), getSoldeController);
+router.get('/solde', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getSoldeController);
 
 /**
  * @swagger
@@ -86,7 +87,7 @@ router.get('/solde', roleMiddleware(['bureau', 'tresorier']), getSoldeController
  *       401:
  *         description: Non authentifié
  */
-router.get('/transactions', roleMiddleware(['bureau', 'tresorier']), getTransactionsController);
+router.get('/transactions', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getTransactionsController);
 
 /**
  * @swagger
@@ -111,7 +112,7 @@ router.get('/transactions', roleMiddleware(['bureau', 'tresorier']), getTransact
  *       401:
  *         description: Non authentifié
  */
-router.get('/evolution', roleMiddleware(['bureau', 'tresorier']), getEvolutionController);
+router.get('/evolution', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getEvolutionController);
 
 /**
  * @swagger
@@ -135,7 +136,7 @@ router.get('/evolution', roleMiddleware(['bureau', 'tresorier']), getEvolutionCo
  *       401:
  *         description: Non authentifié
  */
-router.get('/previsions', roleMiddleware(['bureau', 'tresorier']), getPrevisionsController);
+router.get('/previsions', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getPrevisionsController);
 
 /**
  * @swagger
@@ -152,6 +153,6 @@ router.get('/previsions', roleMiddleware(['bureau', 'tresorier']), getPrevisions
  *       401:
  *         description: Non authentifié
  */
-router.get('/alertes', roleMiddleware(['bureau', 'tresorier']), getAlertesController);
+router.get('/alertes', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getAlertesController);
 
 module.exports = router;

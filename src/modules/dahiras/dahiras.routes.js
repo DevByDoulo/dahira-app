@@ -13,6 +13,7 @@ const {
 } = require('./dahiras.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const roleMiddleware = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 // Note: Les routes dahiras ne nécessitent PAS de tenant middleware
 // car elles concernent la gestion des dahiras eux-mêmes
@@ -157,7 +158,7 @@ router.get('/:id', getDahiraByIdController);
  *       404:
  *         description: Dahira non trouvé
  */
-router.put('/:id', authMiddleware, roleMiddleware(['bureau']), updateDahiraValidation, updateDahiraController);
+router.put('/:id', authMiddleware, roleMiddleware(ROLES.BUREAU), updateDahiraValidation, updateDahiraController);
 
 /**
  * @swagger
@@ -182,7 +183,7 @@ router.put('/:id', authMiddleware, roleMiddleware(['bureau']), updateDahiraValid
  *       404:
  *         description: Dahira non trouvé
  */
-router.patch('/:id/desactiver', authMiddleware, roleMiddleware(['bureau']), desactiverDahiraController);
+router.patch('/:id/desactiver', authMiddleware, roleMiddleware(ROLES.BUREAU), desactiverDahiraController);
 
 /**
  * @swagger
@@ -207,7 +208,7 @@ router.patch('/:id/desactiver', authMiddleware, roleMiddleware(['bureau']), desa
  *       404:
  *         description: Dahira non trouvé
  */
-router.patch('/:id/activer', authMiddleware, roleMiddleware(['bureau']), activerDahiraController);
+router.patch('/:id/activer', authMiddleware, roleMiddleware(ROLES.BUREAU), activerDahiraController);
 
 /**
  * @swagger
@@ -234,6 +235,6 @@ router.patch('/:id/activer', authMiddleware, roleMiddleware(['bureau']), activer
  *       404:
  *         description: Dahira non trouvé
  */
-router.delete('/:id', authMiddleware, roleMiddleware(['bureau']), deleteDahiraController);
+router.delete('/:id', authMiddleware, roleMiddleware(ROLES.BUREAU), deleteDahiraController);
 
 module.exports = router;

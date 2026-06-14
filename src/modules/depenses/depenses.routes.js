@@ -16,6 +16,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const roleMiddleware = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
@@ -72,7 +73,7 @@ router.use(tenantMiddleware);
  *       403:
  *         description: Accès refusé
  */
-router.post('/', roleMiddleware(['bureau', 'tresorier']), createDepenseValidation, createDepenseController);
+router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), createDepenseValidation, createDepenseController);
 
 /**
  * @swagger
@@ -119,7 +120,7 @@ router.post('/', roleMiddleware(['bureau', 'tresorier']), createDepenseValidatio
  *       401:
  *         description: Non authentifié
  */
-router.get('/', roleMiddleware(['bureau', 'tresorier']), getAllDepensesController);
+router.get('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getAllDepensesController);
 
 /**
  * @swagger
@@ -136,7 +137,7 @@ router.get('/', roleMiddleware(['bureau', 'tresorier']), getAllDepensesControlle
  *       401:
  *         description: Non authentifié
  */
-router.get('/stats', roleMiddleware(['bureau', 'tresorier']), getStatistiquesController);
+router.get('/stats', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getStatistiquesController);
 
 /**
  * @swagger
@@ -161,7 +162,7 @@ router.get('/stats', roleMiddleware(['bureau', 'tresorier']), getStatistiquesCon
  *       404:
  *         description: Dépense non trouvée
  */
-router.get('/:id', roleMiddleware(['bureau', 'tresorier']), getDepenseByIdController);
+router.get('/:id', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getDepenseByIdController);
 
 /**
  * @swagger
@@ -210,14 +211,20 @@ router.get('/:id', roleMiddleware(['bureau', 'tresorier']), getDepenseByIdContro
  *       404:
  *         description: Dépense non trouvée
  */
-router.put('/:id', roleMiddleware(['bureau', 'tresorier']), updateDepenseValidation, updateDepenseController);
+router.put('/:id', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), updateDepenseValidation, updateDepenseController);
 
 /**
  * @swagger
  * /api/depenses/{id}/valider:
  *   patch:
  *     summary: Valider une dépense
- *     description: Approuver une dépense en attente (Bureau uniquement)
+ *     description: |
+ *       Approuver une dépense en attente.
+ *       
+ *       **Permission:** Bureau uniquement
+ *       
+ *       **Séparation des pouvoirs:** Le Trésorier crée les dépenses mais seul 
+ *       le Bureau peut les valider pour assurer transparence et contrôle.
  *     tags: [Dépenses]
  *     security:
  *       - bearerAuth: []
@@ -233,18 +240,21 @@ router.put('/:id', roleMiddleware(['bureau', 'tresorier']), updateDepenseValidat
  *       401:
  *         description: Non authentifié
  *       403:
- *         description: Accès refusé
+ *         description: Accès refusé - Bureau uniquement
  *       404:
  *         description: Dépense non trouvée
  */
-router.patch('/:id/valider', roleMiddleware(['bureau']), validerDepenseController);
+router.patch('/:id/valider', roleMiddleware(ROLES.BUREAU), validerDepenseController);
 
 /**
  * @swagger
  * /api/depenses/{id}/rejeter:
  *   patch:
  *     summary: Rejeter une dépense
- *     description: Refuser une dépense en attente (Bureau uniquement)
+ *     description: |
+ *       Refuser une dépense en attente.
+ *       
+ *       **Permission:** Bureau uniquement
  *     tags: [Dépenses]
  *     security:
  *       - bearerAuth: []
@@ -274,16 +284,19 @@ router.patch('/:id/valider', roleMiddleware(['bureau']), validerDepenseControlle
  *       401:
  *         description: Non authentifié
  *       403:
- *         description: Accès refusé
+ *         description: Accès refusé - Bureau uniquement
  */
-router.patch('/:id/rejeter', roleMiddleware(['bureau']), rejeterDepenseValidation, rejeterDepenseController);
+router.patch('/:id/rejeter', roleMiddleware(ROLES.BUREAU), rejeterDepenseValidation, rejeterDepenseController);
 
 /**
  * @swagger
  * /api/depenses/{id}:
  *   delete:
  *     summary: Supprimer une dépense
- *     description: Supprimer une dépense en attente ou rejetée (Bureau uniquement)
+ *     description: |
+ *       Supprimer une dépense en attente ou rejetée.
+ *       
+ *       **Permission:** Bureau uniquement
  *     tags: [Dépenses]
  *     security:
  *       - bearerAuth: []
@@ -299,10 +312,10 @@ router.patch('/:id/rejeter', roleMiddleware(['bureau']), rejeterDepenseValidatio
  *       401:
  *         description: Non authentifié
  *       403:
- *         description: Accès refusé
+ *         description: Accès refusé - Bureau uniquement
  *       404:
  *         description: Dépense non trouvée ou impossible à supprimer
  */
-router.delete('/:id', roleMiddleware(['bureau']), deleteDepenseController);
+router.delete('/:id', roleMiddleware(ROLES.BUREAU), deleteDepenseController);
 
 module.exports = router;

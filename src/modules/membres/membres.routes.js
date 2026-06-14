@@ -12,6 +12,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const allowRoles = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 /**
  * @swagger
@@ -79,7 +80,7 @@ const allowRoles = require('../../middlewares/role.middleware');
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/', authMiddleware, tenantMiddleware, allowRoles('bureau', 'tresorier'), getAllMembresController);
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getAllMembresController);
 
 /**
  * @swagger
@@ -254,7 +255,7 @@ router.get('/:id', authMiddleware, tenantMiddleware, getMembreByIdController);
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/', authMiddleware, tenantMiddleware, allowRoles('bureau'), createMembreValidation, createMembreController);
+router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), createMembreValidation, createMembreController);
 
 /**
  * @swagger
@@ -361,7 +362,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles('bureau'), createM
  *       404:
  *         description: Membre non trouvé
  */
-router.put('/:id', authMiddleware, tenantMiddleware, allowRoles('bureau'), updateMembreValidation, updateMembreController);
+router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), updateMembreValidation, updateMembreController);
 
 /**
  * @swagger
@@ -434,6 +435,6 @@ router.put('/:id', authMiddleware, tenantMiddleware, allowRoles('bureau'), updat
  *       404:
  *         description: Membre non trouvé
  */
-router.patch('/:id/desactiver', authMiddleware, tenantMiddleware, allowRoles('bureau'), desactiverMembreController);
+router.patch('/:id/desactiver', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), desactiverMembreController);
 
 module.exports = router;

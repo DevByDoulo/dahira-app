@@ -9,6 +9,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const allowRoles = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 // Configuration Multer pour upload en mémoire
 const upload = multer({
@@ -61,7 +62,7 @@ router.post(
   '/membres/:id',
   authMiddleware,
   tenantMiddleware,
-  allowRoles('bureau'),
+  allowRoles(ROLES.BUREAU),
   upload.single('photo'),
   uploadMembrePhotoController
 );
@@ -88,7 +89,7 @@ router.delete(
   '/membres/:id',
   authMiddleware,
   tenantMiddleware,
-  allowRoles('bureau'),
+  allowRoles(ROLES.BUREAU),
   deleteMembrePhotoController
 );
 

@@ -9,6 +9,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const roleMiddleware = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
@@ -37,7 +38,7 @@ router.use(tenantMiddleware);
  *       404:
  *         description: Cotisation non trouvée
  */
-router.post('/cotisation/:cotisation_id/generer', roleMiddleware(['bureau', 'tresorier']), genererRecuController);
+router.post('/cotisation/:cotisation_id/generer', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), genererRecuController);
 
 /**
  * @swagger
@@ -62,7 +63,7 @@ router.post('/cotisation/:cotisation_id/generer', roleMiddleware(['bureau', 'tre
  *       401:
  *         description: Non authentifié
  */
-router.post('/cotisation/:cotisation_id/envoyer', roleMiddleware(['bureau', 'tresorier']), envoyerRecuController);
+router.post('/cotisation/:cotisation_id/envoyer', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), envoyerRecuController);
 
 /**
  * @swagger

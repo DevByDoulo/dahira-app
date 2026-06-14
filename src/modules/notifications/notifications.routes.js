@@ -13,6 +13,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const roleMiddleware = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
@@ -159,7 +160,7 @@ router.delete('/:id', deleteNotificationController);
  *       403:
  *         description: Accès refusé
  */
-router.post('/notify-all', roleMiddleware(['bureau']), notifyAllValidation, notifyAllMembersController);
+router.post('/notify-all', roleMiddleware(ROLES.BUREAU), notifyAllValidation, notifyAllMembersController);
 
 /**
  * @swagger
@@ -178,7 +179,7 @@ router.post('/notify-all', roleMiddleware(['bureau']), notifyAllValidation, noti
  *       403:
  *         description: Accès refusé
  */
-router.post('/seance-reminders', roleMiddleware(['bureau']), sendSeanceRemindersController);
+router.post('/seance-reminders', roleMiddleware(ROLES.BUREAU), sendSeanceRemindersController);
 
 /**
  * @swagger
@@ -197,6 +198,6 @@ router.post('/seance-reminders', roleMiddleware(['bureau']), sendSeanceReminders
  *       403:
  *         description: Accès refusé
  */
-router.post('/cotisation-retard', roleMiddleware(['bureau', 'tresorier']), sendCotisationRetardAlertsController);
+router.post('/cotisation-retard', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), sendCotisationRetardAlertsController);
 
 module.exports = router;

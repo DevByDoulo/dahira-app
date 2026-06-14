@@ -15,6 +15,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const roleMiddleware = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
@@ -51,7 +52,7 @@ router.use(tenantMiddleware);
  *       401:
  *         description: Non authentifié
  */
-router.post('/', roleMiddleware(['bureau', 'tresorier']), presenceValidation, enregistrerPresenceController);
+router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), presenceValidation, enregistrerPresenceController);
 
 /**
  * @swagger
@@ -84,7 +85,7 @@ router.post('/', roleMiddleware(['bureau', 'tresorier']), presenceValidation, en
  *       400:
  *         description: Erreur de validation
  */
-router.post('/batch', roleMiddleware(['bureau', 'tresorier']), presencesBatchValidation, enregistrerPresencesBatchController);
+router.post('/batch', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), presencesBatchValidation, enregistrerPresencesBatchController);
 
 /**
  * @swagger
@@ -184,7 +185,7 @@ router.get('/stats', getStatistiquesGlobalesController);
  *       400:
  *         description: Erreur de validation
  */
-router.post('/absence', roleMiddleware(['bureau', 'tresorier']), presenceValidation, marquerAbsenceController);
+router.post('/absence', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), presenceValidation, marquerAbsenceController);
 
 /**
  * @swagger
@@ -209,7 +210,7 @@ router.post('/absence', roleMiddleware(['bureau', 'tresorier']), presenceValidat
  *       403:
  *         description: Accès refusé
  */
-router.delete('/:id', roleMiddleware(['bureau', 'tresorier']), supprimerPresenceController);
+router.delete('/:id', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), supprimerPresenceController);
 
 /**
  * @swagger

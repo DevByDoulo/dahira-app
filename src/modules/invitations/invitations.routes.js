@@ -13,6 +13,7 @@ const {
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const allowRoles = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
 /**
  * @swagger
@@ -62,7 +63,7 @@ router.post(
   '/',
   authMiddleware,
   tenantMiddleware,
-  allowRoles('bureau', 'tresorier'),
+  allowRoles(ROLES.BUREAU, ROLES.TRESORIER),
   createInvitationValidation,
   createInvitationController
 );
@@ -95,7 +96,7 @@ router.get(
   '/',
   authMiddleware,
   tenantMiddleware,
-  allowRoles('bureau', 'tresorier'),
+  allowRoles(ROLES.BUREAU, ROLES.TRESORIER),
   getInvitationsController
 );
 
@@ -209,7 +210,7 @@ router.patch(
   '/:id/cancel',
   authMiddleware,
   tenantMiddleware,
-  allowRoles('bureau', 'tresorier'),
+  allowRoles(ROLES.BUREAU, ROLES.TRESORIER),
   cancelInvitationController
 );
 
@@ -245,7 +246,7 @@ router.post(
   '/:id/resend',
   authMiddleware,
   tenantMiddleware,
-  allowRoles('bureau', 'tresorier'),
+  allowRoles(ROLES.BUREAU, ROLES.TRESORIER),
   resendInvitationController
 );
 
