@@ -1,0 +1,438 @@
+{
+  "info": {
+    "name": "Dahira App API",
+    "description": "Collection complète pour tester l'API Dahira App",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dahira_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "membre_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', jsonData.data.token);",
+                  "    console.log('Token saved:', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"221771234567\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"221771234567\",\n  \"password\": \"password123\",\n  \"nom\": \"Diallo\",\n  \"email\": \"test@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dahiras",
+      "item": [
+        {
+          "name": "Créer Dahira",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Dahira Test\",\n  \"adresse\": \"Dakar, Sénégal\",\n  \"telephone\": \"221771234567\",\n  \"email\": \"contact@dahira-test.sn\",\n  \"description\": \"Dahira de test pour l'API\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/dahiras",
+              "host": ["{{base_url}}"],
+              "path": ["dahiras"]
+            }
+          }
+        },
+        {
+          "name": "Liste Dahiras",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dahiras?actif=true",
+              "host": ["{{base_url}}"],
+              "path": ["dahiras"],
+              "query": [
+                {
+                  "key": "actif",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Détails Dahira",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dahiras/{{dahira_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["dahiras", "{{dahira_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Statistiques",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/stats",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Graphiques",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/charts",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "charts"]
+            }
+          }
+        },
+        {
+          "name": "Activité Récente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/activity?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "activity"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trésorerie",
+      "item": [
+        {
+          "name": "Solde Actuel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tresorerie/solde",
+              "host": ["{{base_url}}"],
+              "path": ["tresorerie", "solde"]
+            }
+          }
+        },
+        {
+          "name": "Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tresorerie/transactions?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["tresorerie", "transactions"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Évolution",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tresorerie/evolution?periode=mois",
+              "host": ["{{base_url}}"],
+              "path": ["tresorerie", "evolution"],
+              "query": [
+                {
+                  "key": "periode",
+                  "value": "mois"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Prévisions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tresorerie/previsions?mois=3",
+              "host": ["{{base_url}}"],
+              "path": ["tresorerie", "previsions"],
+              "query": [
+                {
+                  "key": "mois",
+                  "value": "3"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dépenses",
+      "item": [
+        {
+          "name": "Créer Dépense",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Achat de matériel sono\",\n  \"montant\": 150000,\n  \"categorie\": \"evenements\",\n  \"mode_paiement\": \"especes\",\n  \"date_depense\": \"2026-06-14\",\n  \"note\": \"Pour l'événement du mois\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/depenses",
+              "host": ["{{base_url}}"],
+              "path": ["depenses"]
+            }
+          }
+        },
+        {
+          "name": "Liste Dépenses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/depenses?statut=en_attente",
+              "host": ["{{base_url}}"],
+              "path": ["depenses"],
+              "query": [
+                {
+                  "key": "statut",
+                  "value": "en_attente"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Statistiques Dépenses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/depenses/stats",
+              "host": ["{{base_url}}"],
+              "path": ["depenses", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Présences",
+      "item": [
+        {
+          "name": "Enregistrer Présence",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seance_id\": 1,\n  \"membre_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/presences",
+              "host": ["{{base_url}}"],
+              "path": ["presences"]
+            }
+          }
+        },
+        {
+          "name": "Présences Séance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/presences/seance/1",
+              "host": ["{{base_url}}"],
+              "path": ["presences", "seance", "1"]
+            }
+          }
+        },
+        {
+          "name": "Feuille de Présence",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/presences/feuille/1",
+              "host": ["{{base_url}}"],
+              "path": ["presences", "feuille", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Mes Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/notifications?limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marquer Comme Lue",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/notifications/1/read",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "1", "read"]
+            }
+          }
+        },
+        {
+          "name": "Tout Marquer Lu",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/notifications/read-all",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "read-all"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

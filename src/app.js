@@ -21,21 +21,32 @@ const errorMiddleware = require('./middlewares/error.middleware');
 
 // Swagger documentation
 const specs = require('./config/swagger');
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+const swaggerUiConfig = require('./config/swagger-ui-config');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiConfig));
 
 // Routes auth (login est public, autres endpoints nécessitent auth)
 app.use('/api/auth', require('./modules/auth/auth.routes'));
 
-// Routes API protégées (auth + tenant middleware globaux)
-// À ajouter plus tard pour les autres modules:
-// app.use('/api/dahiras', authMiddleware, tenantMiddleware, require('./modules/dahiras/dahiras.routes'));
+// Routes publiques
+app.use('/api/invitations', require('./modules/invitations/invitations.routes'));
+app.use('/api/password-reset', require('./modules/password-reset/password-reset.routes'));
+
+// Routes dahiras (pas de tenant middleware car gestion multi-dahira)
+app.use('/api/dahiras', require('./modules/dahiras/dahiras.routes'));
+
+// Routes API protégées (auth + tenant middleware dans les routes)
 app.use('/api/membres', require('./modules/membres/membres.routes'));
 app.use('/api/users', require('./modules/users/users.routes'));
 app.use('/api/seances', require('./modules/seances/seances.routes'));
 app.use('/api/cotisations', require('./modules/cotisations/cotisations.routes'));
 app.use('/api/annonces', require('./modules/annonces/annonces.routes'));
 app.use('/api/evenements', require('./modules/evenements/evenements.routes'));
-// etc.
+app.use('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
+app.use('/api/tresorerie', require('./modules/tresorerie/tresorerie.routes'));
+app.use('/api/presences', require('./modules/presences/presences.routes'));
+app.use('/api/recus', require('./modules/recus/recus.routes'));
+app.use('/api/notifications', require('./modules/notifications/notifications.routes'));
+app.use('/api/depenses', require('./modules/depenses/depenses.routes'));
 
 // Middleware de gestion des erreurs (doit être à la fin)
 app.use(errorMiddleware);
