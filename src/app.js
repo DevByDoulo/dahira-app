@@ -33,6 +33,7 @@ app.use('/api/membres', require('./modules/membres/membres.routes'));
 app.use('/api/users', require('./modules/users/users.routes'));
 app.use('/api/seances', require('./modules/seances/seances.routes'));
 app.use('/api/cotisations', require('./modules/cotisations/cotisations.routes'));
+app.use('/api/annonces', require('./modules/annonces/annonces.routes'));
 // etc.
 
 // Middleware de gestion des erreurs (doit être à la fin)

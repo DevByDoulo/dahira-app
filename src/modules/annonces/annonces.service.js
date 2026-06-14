@@ -1,1 +1,143 @@
-// Service pour les annonces
+const pool = require('../../config/db');
+
+const getAllAnnonces = async (dahiraId, userRole) => {
+  let query = `SELECT a.*, u.nom as publie_par_nom
+               FROM annonces a
+               LEFT JOIN users u ON a.publie_par = u.id
+               WHERE a.dahira_id = ?`;
+  const params = [dahiraId];
+
+  // Normal members only see annonces where cible_groupe IS NULL
+  if (userRole === 'membre') {
+    query += ` AND (a.cible_groupe IS NULL OR a.cible_groupe = '')`;
+  }
+
+  query += ` ORDER BY a.epinglee DESC, a.created_at DESC`;
+
+  const [annonces] = await pool.query(query, params);
+  return annonces;
+};
+
+const getAnnonceById = async (id, dahiraId) => {
+  const [annonces] = await pool.query(
+    `SELECT a.*, u.nom as publie_par_nom
+     FROM annonces a
+     LEFT JOIN users u ON a.publie_par = u.id
+     WHERE a.id = ? AND a.dahira_id = ?`,
+    [id, dahiraId]
+  );
+
+  if (annonces.length === 0) {
+    throw new Error('Annonce non trouvée');
+  }
+
+  return annonces[0];
+};
+
+const createAnnonce = async (dahiraId, annonceData, userId) => {
+  const { titre, contenu, image_url, cible_groupe } = annonceData;
+
+  const [result] = await pool.query(
+    `INSERT INTO annonces (dahira_id, titre, contenu, image_url, cible_groupe, publie_par, epinglee)
+     VALUES (?, ?, ?, ?, ?, ?, FALSE)`,
+    [dahiraId, titre, contenu, image_url, cible_groupe, userId]
+  );
+
+  const [newAnnonce] = await pool.query(
+    `SELECT a.*, u.nom as publie_par_nom
+     FROM annonces a
+     LEFT JOIN users u ON a.publie_par = u.id
+     WHERE a.id = ?`,
+    [result.insertId]
+  );
+
+  return newAnnonce[0];
+};
+
+const updateAnnonce = async (id, dahiraId, annonceData) => {
+  const { titre, contenu, image_url, cible_groupe } = annonceData;
+
+  // Check if annonce exists and belongs to dahira
+  const [existing] = await pool.query(
+    'SELECT id FROM annonces WHERE id = ? AND dahira_id = ?',
+    [id, dahiraId]
+  );
+
+  if (existing.length === 0) {
+    throw new Error('Annonce non trouvée');
+  }
+
+  await pool.query(
+    `UPDATE annonces
+     SET titre = ?, contenu = ?, image_url = ?, cible_groupe = ?
+     WHERE id = ? AND dahira_id = ?`,
+    [titre, contenu, image_url, cible_groupe, id, dahiraId]
+  );
+
+  const [updatedAnnonce] = await pool.query(
+    `SELECT a.*, u.nom as publie_par_nom
+     FROM annonces a
+     LEFT JOIN users u ON a.publie_par = u.id
+     WHERE a.id = ?`,
+    [id]
+  );
+
+  return updatedAnnonce[0];
+};
+
+const deleteAnnonce = async (id, dahiraId) => {
+  // Check if annonce exists and belongs to dahira
+  const [existing] = await pool.query(
+    'SELECT id FROM annonces WHERE id = ? AND dahira_id = ?',
+    [id, dahiraId]
+  );
+
+  if (existing.length === 0) {
+    throw new Error('Annonce non trouvée');
+  }
+
+  await pool.query(
+    'DELETE FROM annonces WHERE id = ? AND dahira_id = ?',
+    [id, dahiraId]
+  );
+
+  return { message: 'Annonce supprimée avec succès' };
+};
+
+const toggleEpinglee = async (id, dahiraId) => {
+  // Check if annonce exists and belongs to dahira
+  const [existing] = await pool.query(
+    'SELECT id, epinglee FROM annonces WHERE id = ? AND dahira_id = ?',
+    [id, dahiraId]
+  );
+
+  if (existing.length === 0) {
+    throw new Error('Annonce non trouvée');
+  }
+
+  const newEpinglee = !existing[0].epinglee;
+
+  await pool.query(
+    'UPDATE annonces SET epinglee = ? WHERE id = ? AND dahira_id = ?',
+    [newEpinglee, id, dahiraId]
+  );
+
+  const [updatedAnnonce] = await pool.query(
+    `SELECT a.*, u.nom as publie_par_nom
+     FROM annonces a
+     LEFT JOIN users u ON a.publie_par = u.id
+     WHERE a.id = ?`,
+    [id]
+  );
+
+  return updatedAnnonce[0];
+};
+
+module.exports = {
+  getAllAnnonces,
+  getAnnonceById,
+  createAnnonce,
+  updateAnnonce,
+  deleteAnnonce,
+  toggleEpinglee
+};
