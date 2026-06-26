@@ -2,9 +2,12 @@ const express = require('express');
 const router = express.Router();
 const {
   getAllUsersController,
+  getUserByMembreIdController,
   createUserController,
   updateUserController,
   desactiverUserController,
+  activerUserController,
+  updateMeController,
   createUserValidation,
   updateUserValidation
 } = require('./users.controller');
@@ -70,6 +73,10 @@ const { ROLES } = require('../../constants/roles');
  *       403:
  *         description: Rôle insuffisant
  */
+// Routes statiques avant /:id
+router.patch('/me', authMiddleware, tenantMiddleware, updateMeController);
+router.get('/by-membre/:membre_id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), getUserByMembreIdController);
+
 router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), getAllUsersController);
 
 /**
@@ -310,5 +317,6 @@ router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), u
  *         description: Utilisateur non trouvé
  */
 router.patch('/:id/desactiver', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), desactiverUserController);
+router.patch('/:id/activer', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), activerUserController);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const {
   getAllAnnoncesController,
   getAnnonceByIdController,
@@ -7,6 +8,7 @@ const {
   updateAnnonceController,
   deleteAnnonceController,
   toggleEpingleeController,
+  uploadAnnonceImageController,
   createAnnonceValidation,
   updateAnnonceValidation
 } = require('./annonces.controller');
@@ -14,6 +16,16 @@ const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const allowRoles = require('../../middlewares/role.middleware');
 const { ROLES } = require('../../constants/roles');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Format non autorisé. Utilisez JPG, PNG, WebP ou GIF.'));
+  }
+});
 
 /**
  * @swagger
@@ -75,6 +87,8 @@ const { ROLES } = require('../../constants/roles');
  *       401:
  *         description: Non authentifié
  */
+router.post('/upload-image', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), upload.single('image'), uploadAnnonceImageController);
+
 router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), getAllAnnoncesController);
 
 /**

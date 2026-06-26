@@ -43,8 +43,8 @@ const requestPasswordReset = async (telephone) => {
   );
 
   // Générer le lien de réinitialisation
-  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const resetLink = `${baseUrl}/reset-password?token=${token}`;
+  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+  const resetLink = `${baseUrl}/nouveau-mot-de-passe?token=${token}`;
 
   // Envoyer l'email
   await sendPasswordResetEmail(user.email, user.nom, resetLink);

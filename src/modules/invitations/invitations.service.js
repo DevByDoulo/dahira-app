@@ -76,7 +76,7 @@ const createInvitation = async (dahiraId, invitationData, invitedByUserId) => {
 
   // Générer le lien d'invitation
   const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const invitationLink = `${baseUrl}/invitation/accept?token=${token}`;
+  const invitationLink = `${baseUrl}/accepter-invitation?token=${token}`;
 
   // Envoyer l'email d'invitation
   try {
@@ -310,7 +310,7 @@ const resendInvitation = async (invitationId, dahiraId) => {
 
   // Générer le nouveau lien
   const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const invitationLink = `${baseUrl}/invitation/accept?token=${newToken}`;
+  const invitationLink = `${baseUrl}/accepter-invitation?token=${newToken}`;
 
   // Renvoyer l'email
   await sendInvitationEmail(

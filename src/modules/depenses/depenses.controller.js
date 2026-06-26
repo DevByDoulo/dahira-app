@@ -6,7 +6,8 @@ const {
   validerDepense,
   rejeterDepense,
   deleteDepense,
-  getStatistiques
+  getStatistiques,
+  uploadJustificatif
 } = require('./depenses.service');
 const { success, error } = require('../../utils/response');
 const { body, validationResult } = require('express-validator');
@@ -160,6 +161,21 @@ const getStatistiquesController = async (req, res, next) => {
   }
 };
 
+/**
+ * Upload un justificatif
+ */
+const uploadJustificatifController = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return error(res, 'Aucun fichier fourni', 400);
+    }
+    const result = await uploadJustificatif(req.file);
+    return success(res, result, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Validations
 const createDepenseValidation = [
   body('description').notEmpty().withMessage('Description requise'),
@@ -189,6 +205,7 @@ module.exports = {
   rejeterDepenseController,
   deleteDepenseController,
   getStatistiquesController,
+  uploadJustificatifController,
   createDepenseValidation,
   updateDepenseValidation,
   rejeterDepenseValidation

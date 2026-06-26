@@ -2,6 +2,10 @@ const pool = require('../../config/db');
 const fs = require('fs').promises;
 const path = require('path');
 const sharp = require('sharp');
+const { randomUUID } = require('crypto');
+
+// Chemin absolu vers uploads/ depuis la racine du projet backend
+const UPLOADS_BASE = path.resolve(__dirname, '..', '..', '..', 'uploads');
 
 /**
  * Upload une photo de profil pour un membre
@@ -19,72 +23,44 @@ const uploadMembrePhoto = async (membreId, dahiraId, file) => {
 
   const oldPhotoUrl = membre[0].photo_url;
 
-  // Créer les dossiers si nécessaire
-  const uploadDir = path.join('uploads', 'photos', 'membres');
-  const thumbnailDir = path.join('uploads', 'photos', 'membres', 'thumbnails');
-  
+  // Créer le dossier si nécessaire (chemin absolu)
+  const uploadDir = path.join(UPLOADS_BASE, 'photos', 'membres');
   await fs.mkdir(uploadDir, { recursive: true });
-  await fs.mkdir(thumbnailDir, { recursive: true });
 
-  // Générer les noms de fichiers
+  // Générer le nom de fichier
   const timestamp = Date.now();
-  const ext = path.extname(file.originalname);
-  const filename = `membre-${membreId}-${timestamp}${ext}`;
-  const thumbnailFilename = `thumb-${filename}`;
-
+  const filename = `membre-${membreId}-${timestamp}.jpg`;
   const photoPath = path.join(uploadDir, filename);
-  const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
 
   try {
     // Redimensionner et optimiser l'image principale (max 800x800)
     await sharp(file.buffer)
-      .resize(800, 800, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
+      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 85 })
       .toFile(photoPath);
 
-    // Créer une miniature (150x150)
-    await sharp(file.buffer)
-      .resize(150, 150, {
-        fit: 'cover'
-      })
-      .jpeg({ quality: 80 })
-      .toFile(thumbnailPath);
-
-    // Construire les URLs
     const photoUrl = `/uploads/photos/membres/${filename}`;
-    const thumbnailUrl = `/uploads/photos/membres/thumbnails/${thumbnailFilename}`;
 
-    // Mettre à jour la base de données
+    // Mettre à jour uniquement photo_url (thumbnail_url n'existe pas dans la table)
     await pool.query(
-      'UPDATE membres SET photo_url = ?, thumbnail_url = ? WHERE id = ?',
-      [photoUrl, thumbnailUrl, membreId]
+      'UPDATE membres SET photo_url = ? WHERE id = ?',
+      [photoUrl, membreId]
     );
 
     // Supprimer l'ancienne photo si elle existe
     if (oldPhotoUrl && oldPhotoUrl !== photoUrl) {
-      const oldPhotoPath = path.join(process.cwd(), oldPhotoUrl);
-      const oldThumbnailPath = oldPhotoPath.replace('/membres/', '/membres/thumbnails/').replace(/membre-/, 'thumb-membre-');
-      
       try {
-        await fs.unlink(oldPhotoPath);
-        await fs.unlink(oldThumbnailPath);
+        await fs.unlink(path.join(UPLOADS_BASE, '..', oldPhotoUrl));
       } catch (err) {
         console.error('Erreur suppression ancienne photo:', err);
       }
     }
 
-    return {
-      photo_url: photoUrl,
-      thumbnail_url: thumbnailUrl
-    };
+    return { photo_url: photoUrl };
   } catch (err) {
-    // Nettoyer les fichiers en cas d'erreur
+    // Nettoyer le fichier en cas d'erreur
     try {
       await fs.unlink(photoPath);
-      await fs.unlink(thumbnailPath);
     } catch (cleanupErr) {
       // Ignorer les erreurs de nettoyage
     }
@@ -98,7 +74,7 @@ const uploadMembrePhoto = async (membreId, dahiraId, file) => {
 const deleteMembrePhoto = async (membreId, dahiraId) => {
   // Vérifier que le membre existe et appartient au dahira
   const [membre] = await pool.query(
-    'SELECT id, photo_url, thumbnail_url FROM membres WHERE id = ? AND dahira_id = ?',
+    'SELECT id, photo_url FROM membres WHERE id = ? AND dahira_id = ?',
     [membreId, dahiraId]
   );
 
@@ -106,23 +82,17 @@ const deleteMembrePhoto = async (membreId, dahiraId) => {
     throw new Error('Membre non trouvé');
   }
 
-  const { photo_url, thumbnail_url } = membre[0];
+  const { photo_url } = membre[0];
 
   if (!photo_url) {
     throw new Error('Ce membre n\'a pas de photo');
   }
 
-  // Supprimer les fichiers
-  const photoPath = path.join(process.cwd(), photo_url);
-  const thumbnailPath = thumbnail_url ? path.join(process.cwd(), thumbnail_url) : null;
-
+  // Supprimer le fichier
   try {
-    await fs.unlink(photoPath);
-    if (thumbnailPath) {
-      await fs.unlink(thumbnailPath);
-    }
+    await fs.unlink(path.join(UPLOADS_BASE, '..', photo_url));
   } catch (err) {
-    console.error('Erreur suppression fichiers photo:', err);
+    console.error('Erreur suppression fichier photo:', err);
   }
 
   // Mettre à jour la base de données
@@ -152,10 +122,10 @@ const uploadUserPhoto = async (userId, file) => {
 
   const oldPhotoUrl = user[0].photo_url;
 
-  // Créer les dossiers
-  const uploadDir = path.join('uploads', 'photos', 'users');
-  const thumbnailDir = path.join('uploads', 'photos', 'users', 'thumbnails');
-  
+  // Créer les dossiers (chemin absolu)
+  const uploadDir = path.join(UPLOADS_BASE, 'photos', 'users');
+  const thumbnailDir = path.join(UPLOADS_BASE, 'photos', 'users', 'thumbnails');
+
   await fs.mkdir(uploadDir, { recursive: true });
   await fs.mkdir(thumbnailDir, { recursive: true });
 
@@ -191,7 +161,7 @@ const uploadUserPhoto = async (userId, file) => {
 
     // Supprimer l'ancienne photo
     if (oldPhotoUrl && oldPhotoUrl !== photoUrl) {
-      const oldPhotoPath = path.join(process.cwd(), oldPhotoUrl);
+      const oldPhotoPath = path.join(UPLOADS_BASE, '..', oldPhotoUrl);
       const oldThumbnailPath = oldPhotoPath.replace('/users/', '/users/thumbnails/').replace(/user-/, 'thumb-user-');
       
       try {
@@ -217,8 +187,81 @@ const uploadUserPhoto = async (userId, file) => {
   }
 };
 
+/**
+ * Récupérer toutes les photos de la galerie d'un dahira
+ */
+const getGaleriePhotos = async (dahiraId) => {
+  const [photos] = await pool.query(
+    `SELECT p.*, e.titre as evenement_titre, e.date_evenement, e.lieu as evenement_lieu,
+            u.nom as uploader_nom
+     FROM photos p
+     LEFT JOIN evenements e ON p.evenement_id = e.id
+     LEFT JOIN users u ON p.uploaded_by = u.id
+     WHERE p.dahira_id = ?
+     ORDER BY p.evenement_id DESC, p.created_at DESC`,
+    [dahiraId]
+  );
+  return photos;
+};
+
+/**
+ * Upload une ou plusieurs photos dans la galerie
+ */
+const uploadGaleriePhoto = async (dahiraId, uploadedBy, file, evenementId, titre, description) => {
+  const uploadDir = path.join(UPLOADS_BASE, 'photos', 'galerie');
+  await fs.mkdir(uploadDir, { recursive: true });
+
+  const filename = `galerie-${dahiraId}-${randomUUID()}.jpg`;
+  const photoPath = path.join(uploadDir, filename);
+
+  await sharp(file.buffer)
+    .resize(1920, 1080, { fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 85 })
+    .toFile(photoPath);
+
+  const fichierUrl = `/uploads/photos/galerie/${filename}`;
+
+  const [result] = await pool.query(
+    `INSERT INTO photos (dahira_id, evenement_id, titre, description, fichier_url, uploaded_by)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [dahiraId, evenementId || null, titre || null, description || null, fichierUrl, uploadedBy]
+  );
+
+  const [rows] = await pool.query(
+    `SELECT p.*, e.titre as evenement_titre FROM photos p
+     LEFT JOIN evenements e ON p.evenement_id = e.id
+     WHERE p.id = ?`,
+    [result.insertId]
+  );
+  return rows[0];
+};
+
+/**
+ * Supprimer une photo de la galerie
+ */
+const deleteGaleriePhoto = async (photoId, dahiraId) => {
+  const [rows] = await pool.query(
+    'SELECT fichier_url FROM photos WHERE id = ? AND dahira_id = ?',
+    [photoId, dahiraId]
+  );
+
+  if (rows.length === 0) throw new Error('Photo non trouvée');
+
+  try {
+    await fs.unlink(path.join(UPLOADS_BASE, '..', rows[0].fichier_url));
+  } catch (err) {
+    console.error('Erreur suppression fichier photo galerie:', err);
+  }
+
+  await pool.query('DELETE FROM photos WHERE id = ?', [photoId]);
+  return { message: 'Photo supprimée' };
+};
+
 module.exports = {
   uploadMembrePhoto,
   deleteMembrePhoto,
-  uploadUserPhoto
+  uploadUserPhoto,
+  getGaleriePhotos,
+  uploadGaleriePhoto,
+  deleteGaleriePhoto,
 };

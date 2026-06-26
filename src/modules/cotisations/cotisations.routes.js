@@ -4,6 +4,7 @@ const {
   encaisserCotisationController,
   encaisserCotisationsBatchController,
   declarerCotisationController,
+  getAllCotisationsController,
   getPendingCotisationsController,
   validerCotisationController,
   rejeterCotisationController,
@@ -13,7 +14,8 @@ const {
   encaisserCotisationsBatchValidation,
   declarerCotisationValidation,
   rejeterCotisationValidation,
-  getDashboardValidation
+  getDashboardValidation,
+  getAllCotisationsValidation
 } = require('./cotisations.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
@@ -116,6 +118,63 @@ const { ROLES } = require('../../constants/roles');
  *       403:
  *         description: Rôle insuffisant
  */
+/**
+ * @swagger
+ * /api/cotisations:
+ *   get:
+ *     summary: Lister toutes les cotisations
+ *     description: Retourne toutes les cotisations du dahira, avec filtre optionnel par statut
+ *     tags: [Cotisations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: statut
+ *         schema:
+ *           type: string
+ *           enum: [pending, approved, rejected]
+ *         description: Filtrer par statut (optionnel)
+ *     responses:
+ *       200:
+ *         description: Liste des cotisations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       montant:
+ *                         type: number
+ *                       mode_paiement:
+ *                         type: string
+ *                       statut:
+ *                         type: string
+ *                       nom:
+ *                         type: string
+ *                       prenom:
+ *                         type: string
+ *                       date_seance:
+ *                         type: string
+ *                       type:
+ *                         type: string
+ *                       created_at:
+ *                         type: string
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Rôle insuffisant
+ */
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getAllCotisationsValidation, getAllCotisationsController);
+
 router.post('/encaisser', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), encaisserCotisationValidation, encaisserCotisationController);
 
 /**

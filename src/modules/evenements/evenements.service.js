@@ -3,7 +3,7 @@ const pool = require('../../config/db');
 const getAllEvenements = async (dahiraId, membreId) => {
   let query = `SELECT e.*,
                 (SELECT COUNT(*) FROM participations p WHERE p.evenement_id = e.id AND p.inscrit = TRUE) as nombre_inscrits`;
-  const params = [dahiraId];
+  const params = [];
 
   if (membreId) {
     query += `, (SELECT COUNT(*) FROM participations p WHERE p.evenement_id = e.id AND p.membre_id = ? AND p.inscrit = TRUE) > 0 as mon_inscription`;
@@ -22,7 +22,7 @@ const getAllEvenements = async (dahiraId, membreId) => {
 const getEvenementById = async (id, dahiraId, membreId) => {
   let query = `SELECT e.*,
                 (SELECT COUNT(*) FROM participations p WHERE p.evenement_id = e.id AND p.inscrit = TRUE) as nombre_inscrits`;
-  const params = [id, dahiraId];
+  const params = [];
 
   if (membreId) {
     query += `, (SELECT COUNT(*) FROM participations p WHERE p.evenement_id = e.id AND p.membre_id = ? AND p.inscrit = TRUE) > 0 as mon_inscription`;
@@ -44,12 +44,12 @@ const getEvenementById = async (id, dahiraId, membreId) => {
 };
 
 const createEvenement = async (dahiraId, evenementData, userId) => {
-  const { titre, description, date_evenement, heure, lieu, photo_url } = evenementData;
+  const { titre, description, date_evenement, heure, lieu, photo_url, type } = evenementData;
 
   const [result] = await pool.query(
-    `INSERT INTO evenements (dahira_id, titre, description, date_evenement, heure, lieu, photo_url, cree_par)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [dahiraId, titre, description, date_evenement, heure, lieu, photo_url, userId]
+    `INSERT INTO evenements (dahira_id, titre, description, date_evenement, heure, lieu, photo_url, type, cree_par)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [dahiraId, titre, description, date_evenement, heure, lieu, photo_url, type || 'autre', userId]
   );
 
   const [newEvenement] = await pool.query(

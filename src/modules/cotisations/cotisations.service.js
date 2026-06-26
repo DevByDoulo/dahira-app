@@ -219,6 +219,38 @@ const rejeterCotisation = async (id, dahiraId, userId, note = null) => {
   return updatedCotisation[0];
 };
 
+const getAllCotisations = async (dahiraId, statut = null, seanceId = null, membreId = null) => {
+  let whereClause = 'WHERE c.dahira_id = ?';
+  const params = [dahiraId];
+
+  if (statut) {
+    whereClause += ' AND c.statut = ?';
+    params.push(statut);
+  }
+
+  if (seanceId) {
+    whereClause += ' AND c.seance_id = ?';
+    params.push(seanceId);
+  }
+
+  if (membreId) {
+    whereClause += ' AND c.membre_id = ?';
+    params.push(membreId);
+  }
+
+  const [cotisations] = await pool.query(
+    `SELECT c.*, m.nom, m.prenom, s.date_seance, s.type
+     FROM cotisations c
+     JOIN membres m ON c.membre_id = m.id
+     JOIN seances s ON c.seance_id = s.id
+     ${whereClause}
+     ORDER BY c.created_at DESC`,
+    params
+  );
+
+  return cotisations;
+};
+
 const getMesCotisations = async (dahiraId, membreId) => {
   if (!membreId) {
     return [];
@@ -261,7 +293,7 @@ const getDashboard = async (dahiraId, seanceId = null) => {
   const [latestSeance] = await pool.query(
     `SELECT id, date_seance 
      FROM seances 
-     WHERE dahira_id = ? AND type = 'hebdomadaire' 
+     WHERE dahira_id = ? AND type = 'dahira' 
      ORDER BY date_seance DESC 
      LIMIT 1`,
     [dahiraId]
@@ -314,6 +346,7 @@ module.exports = {
   encaisserCotisation,
   encaisserCotisationsBatch,
   declarerCotisation,
+  getAllCotisations,
   getPendingCotisations,
   validerCotisation,
   rejeterCotisation,

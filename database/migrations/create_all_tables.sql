@@ -50,6 +50,8 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255),
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('bureau', 'tresorier', 'membre') DEFAULT 'membre',
+  photo_url VARCHAR(500) NULL,
+  thumbnail_url VARCHAR(500) NULL,
   actif BOOLEAN DEFAULT TRUE,
   email_notifications BOOLEAN DEFAULT TRUE,
   last_login TIMESTAMP NULL,

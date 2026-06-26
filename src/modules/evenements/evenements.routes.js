@@ -1,14 +1,27 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const {
   getAllEvenementsController,
   getEvenementByIdController,
   createEvenementController,
   updateEvenementController,
   deleteEvenementController,
+  uploadEvenementPhotoController,
   createEvenementValidation,
   updateEvenementValidation
 } = require('./evenements.controller');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png'];
+    allowed.includes(file.mimetype)
+      ? cb(null, true)
+      : cb(new Error('Format non autorisé. Utilisez JPG ou PNG.'));
+  },
+});
 const {
   toggleInscriptionController,
   getParticipantsController,
@@ -86,6 +99,8 @@ const { ROLES } = require('../../constants/roles');
  *       401:
  *         description: Non authentifié
  */
+router.post('/upload-photo', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), upload.single('photo'), uploadEvenementPhotoController);
+
 router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), getAllEvenementsController);
 
 /**
@@ -254,7 +269,7 @@ router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, RO
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), createEvenementValidation, createEvenementController);
+router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), upload.single('photo'), createEvenementValidation, createEvenementController);
 
 /**
  * @swagger

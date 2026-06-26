@@ -12,8 +12,19 @@ const app = express();
 app.use(helmet());
 
 // Configuration CORS avec origines spécifiques
+const allowedOrigins = [
+  'http://localhost:4200',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -39,7 +50,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Servir le dossier /uploads en statique
-app.use('/uploads', express.static('uploads'));
+// Cross-Origin-Resource-Policy: cross-origin nécessaire car le frontend (4200) charge
+// des images depuis le backend (3000) — helmet impose "same-origin" par défaut.
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static('uploads'));
 
 // Endpoint de health check
 app.get('/health', (req, res) => {
@@ -84,6 +100,7 @@ app.use('/api/presences', require('./modules/presences/presences.routes'));
 app.use('/api/recus', require('./modules/recus/recus.routes'));
 app.use('/api/notifications', require('./modules/notifications/notifications.routes'));
 app.use('/api/depenses', require('./modules/depenses/depenses.routes'));
+app.use('/api/photos', require('./modules/photos/photos.routes'));
 
 // Middleware de gestion des erreurs (doit être à la fin)
 app.use(errorMiddleware);

@@ -24,5 +24,4 @@ CREATE TABLE IF NOT EXISTS invitations (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Index pour optimiser les recherches
-CREATE INDEX idx_invitations_pending ON invitations(dahira_id, statut, expires_at) 
-WHERE statut = 'pending';
+CREATE INDEX idx_invitations_pending ON invitations(dahira_id, statut, expires_at);

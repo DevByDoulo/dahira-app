@@ -4,14 +4,18 @@ const multer = require('multer');
 const {
   uploadMembrePhotoController,
   deleteMembrePhotoController,
-  uploadUserPhotoController
+  uploadUserPhotoController,
+  uploadMembreMeController,
+  getPhotosController,
+  uploadGaleriePhotoController,
+  deleteGaleriePhotoController,
 } = require('./photos.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const allowRoles = require('../../middlewares/role.middleware');
 const { ROLES } = require('../../constants/roles');
 
-// Configuration Multer pour upload en mémoire
+// Multer : upload unique (profil membre/user)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -26,6 +30,25 @@ const upload = multer({
     }
   }
 });
+
+// Multer : upload multiple pour la galerie (jusqu'à 20 fichiers)
+const uploadMultiple = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Format non autorisé. Seuls les fichiers image sont acceptés.'));
+  },
+});
+
+router.use(authMiddleware);
+router.use(tenantMiddleware);
+
+// ── Galerie photos ──────────────────────────────────────────
+router.get('/', getPhotosController);
+router.post('/', allowRoles(ROLES.BUREAU), uploadMultiple.array('photos', 20), uploadGaleriePhotoController);
+router.delete('/:id([0-9]+)', allowRoles(ROLES.BUREAU), deleteGaleriePhotoController);
+// ────────────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -121,6 +144,14 @@ router.post(
   authMiddleware,
   upload.single('photo'),
   uploadUserPhotoController
+);
+
+router.post(
+  '/membres/me',
+  authMiddleware,
+  tenantMiddleware,
+  upload.single('photo'),
+  uploadMembreMeController
 );
 
 module.exports = router;

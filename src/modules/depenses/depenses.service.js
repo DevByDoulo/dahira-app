@@ -1,4 +1,9 @@
 const pool = require('../../config/db');
+const fs = require('fs').promises;
+const path = require('path');
+const sharp = require('sharp');
+
+const UPLOADS_BASE = path.resolve(__dirname, '..', '..', '..', 'uploads');
 
 /**
  * Créer une dépense
@@ -315,6 +320,32 @@ const getStatistiques = async (dahiraId, filters = {}) => {
   };
 };
 
+/**
+ * Upload un justificatif (image ou PDF)
+ */
+const uploadJustificatif = async (file) => {
+  const uploadDir = path.join(UPLOADS_BASE, 'justificatifs');
+  await fs.mkdir(uploadDir, { recursive: true });
+
+  const timestamp = Date.now();
+  let filename;
+  const filePath_pdf = path.join(uploadDir, `justif-${timestamp}.pdf`);
+  const filePath_img = path.join(uploadDir, `justif-${timestamp}.jpg`);
+
+  if (file.mimetype === 'application/pdf') {
+    filename = `justif-${timestamp}.pdf`;
+    await fs.writeFile(filePath_pdf, file.buffer);
+  } else {
+    filename = `justif-${timestamp}.jpg`;
+    await sharp(file.buffer)
+      .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 85 })
+      .toFile(filePath_img);
+  }
+
+  return { url: `/uploads/justificatifs/${filename}` };
+};
+
 module.exports = {
   createDepense,
   getAllDepenses,
@@ -323,5 +354,6 @@ module.exports = {
   validerDepense,
   rejeterDepense,
   deleteDepense,
-  getStatistiques
+  getStatistiques,
+  uploadJustificatif
 };

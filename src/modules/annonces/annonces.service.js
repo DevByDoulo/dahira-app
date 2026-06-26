@@ -1,4 +1,25 @@
 const pool = require('../../config/db');
+const fs = require('fs').promises;
+const path = require('path');
+const sharp = require('sharp');
+
+const UPLOADS_BASE = path.resolve(__dirname, '..', '..', '..', 'uploads');
+
+const uploadAnnonceImage = async (file, baseUrl) => {
+  const uploadDir = path.join(UPLOADS_BASE, 'annonces');
+  await fs.mkdir(uploadDir, { recursive: true });
+
+  const timestamp = Date.now();
+  const filename = `annonce-${timestamp}.jpg`;
+  const filePath = path.join(uploadDir, filename);
+
+  await sharp(file.buffer)
+    .resize(1200, 630, { fit: 'cover', withoutEnlargement: true })
+    .jpeg({ quality: 85 })
+    .toFile(filePath);
+
+  return { url: `${baseUrl}/uploads/annonces/${filename}` };
+};
 
 const getAllAnnonces = async (dahiraId, userRole) => {
   let query = `SELECT a.*, u.nom as publie_par_nom
@@ -139,5 +160,6 @@ module.exports = {
   createAnnonce,
   updateAnnonce,
   deleteAnnonce,
-  toggleEpinglee
+  toggleEpinglee,
+  uploadAnnonceImage
 };

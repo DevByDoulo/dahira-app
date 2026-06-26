@@ -40,7 +40,7 @@ const login = async (telephone, password) => {
 
 const getMe = async (userId) => {
   const [rows] = await pool.query(
-    'SELECT id, dahira_id, membre_id, nom, telephone, email, role, actif, created_at FROM users WHERE id = ?',
+    'SELECT id, dahira_id, membre_id, nom, telephone, email, role, actif, photo_url, created_at FROM users WHERE id = ?',
     [userId]
   );
 

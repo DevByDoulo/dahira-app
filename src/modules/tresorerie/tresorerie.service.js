@@ -59,24 +59,38 @@
   const getTransactions = async (dahiraId, filters = {}) => {
     const { type, mode_paiement, date_debut, date_fin, limit = 50, offset = 0 } = filters;
 
-    let query = `
-      SELECT 'entree' as type, id, montant, mode_paiement, created_at as date, 
-            'Cotisation' as description, membre_id, seance_id
-      FROM cotisations
-      WHERE dahira_id = ? AND statut = 'approved'
-    `;
+    let query;
+    let params;
 
-    let params = [dahiraId];
-
-    if (type === 'sortie' || !type) {
-      query += `
+    if (type === 'sortie') {
+      query = `
+        SELECT 'sortie' as type, id, montant, mode_paiement, created_at as date,
+              description, NULL as membre_id, NULL as seance_id
+        FROM depenses
+        WHERE dahira_id = ? AND statut = 'validee'
+      `;
+      params = [dahiraId];
+    } else if (type === 'entree') {
+      query = `
+        SELECT 'entree' as type, id, montant, mode_paiement, created_at as date,
+              'Cotisation' as description, membre_id, seance_id
+        FROM cotisations
+        WHERE dahira_id = ? AND statut = 'approved'
+      `;
+      params = [dahiraId];
+    } else {
+      query = `
+        SELECT 'entree' as type, id, montant, mode_paiement, created_at as date,
+              'Cotisation' as description, membre_id, seance_id
+        FROM cotisations
+        WHERE dahira_id = ? AND statut = 'approved'
         UNION ALL
         SELECT 'sortie' as type, id, montant, mode_paiement, created_at as date,
               description, NULL as membre_id, NULL as seance_id
         FROM depenses
         WHERE dahira_id = ? AND statut = 'validee'
       `;
-      params.push(dahiraId);
+      params = [dahiraId, dahiraId];
     }
 
     query += ' ORDER BY date DESC';
@@ -118,7 +132,7 @@
       groupBy = 'YEARWEEK(created_at)';
       dateFormat = '%Y-W%v';
     } else {
-      groupBy = 'DATE_FORMAT(created_at, "%Y-%m")';
+      groupBy = "DATE_FORMAT(created_at, '%Y-%m')";
       dateFormat = '%Y-%m';
     }
 

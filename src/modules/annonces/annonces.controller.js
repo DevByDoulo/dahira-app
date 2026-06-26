@@ -4,7 +4,8 @@ const {
   createAnnonce,
   updateAnnonce,
   deleteAnnonce,
-  toggleEpinglee
+  toggleEpinglee,
+  uploadAnnonceImage
 } = require('./annonces.service');
 const { success, error } = require('../../utils/response');
 const { body, validationResult } = require('express-validator');
@@ -91,6 +92,17 @@ const updateAnnonceValidation = [
   body('cible_groupe').optional()
 ];
 
+const uploadAnnonceImageController = async (req, res, next) => {
+  try {
+    if (!req.file) return error(res, 'Aucun fichier reçu', 400);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const result = await uploadAnnonceImage(req.file, baseUrl);
+    return success(res, result, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getAllAnnoncesController,
   getAnnonceByIdController,
@@ -98,6 +110,7 @@ module.exports = {
   updateAnnonceController,
   deleteAnnonceController,
   toggleEpingleeController,
+  uploadAnnonceImageController,
   createAnnonceValidation,
   updateAnnonceValidation
 };

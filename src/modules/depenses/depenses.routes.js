@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const {
   createDepenseController,
   getAllDepensesController,
@@ -9,6 +10,7 @@ const {
   rejeterDepenseController,
   deleteDepenseController,
   getStatistiquesController,
+  uploadJustificatifController,
   createDepenseValidation,
   updateDepenseValidation,
   rejeterDepenseValidation
@@ -17,6 +19,16 @@ const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
 const roleMiddleware = require('../../middlewares/role.middleware');
 const { ROLES } = require('../../constants/roles');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Format non autorisé. Utilisez JPG, PNG ou PDF.'));
+  }
+});
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
@@ -73,6 +85,8 @@ router.use(tenantMiddleware);
  *       403:
  *         description: Accès refusé
  */
+router.post('/upload-justificatif', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), upload.single('justificatif'), uploadJustificatifController);
+
 router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), createDepenseValidation, createDepenseController);
 
 /**

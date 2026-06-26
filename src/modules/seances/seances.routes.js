@@ -4,9 +4,12 @@ const {
   createSeanceController,
   getAllSeancesController,
   getSeanceCouranteController,
+  getSeanceByIdController,
+  updateSeanceController,
   cloturerSeanceController,
   createSeanceValidation,
-  getAllSeancesValidation
+  getAllSeancesValidation,
+  updateSeanceValidation
 } = require('./seances.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
@@ -138,7 +141,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLE
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getAllSeancesValidation, getAllSeancesController);
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER, ROLES.MEMBRE), getAllSeancesValidation, getAllSeancesController);
 
 /**
  * @swagger
@@ -248,5 +251,9 @@ router.get('/courante', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREA
  *         description: Séance non trouvée
  */
 router.patch('/:id/cloturer', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), cloturerSeanceController);
+
+router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getSeanceByIdController);
+
+router.patch('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), updateSeanceValidation, updateSeanceController);
 
 module.exports = router;

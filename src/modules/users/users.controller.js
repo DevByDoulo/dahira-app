@@ -1,4 +1,4 @@
-const { getAllUsers, createUser, updateUser, desactiverUser } = require('./users.service');
+const { getAllUsers, getUserByMembreId, createUser, updateUser, desactiverUser, activerUser, updateMe } = require('./users.service');
 const { success, error } = require('../../utils/response');
 const { body, validationResult } = require('express-validator');
 
@@ -50,6 +50,26 @@ const desactiverUserController = async (req, res, next) => {
   }
 };
 
+const getUserByMembreIdController = async (req, res, next) => {
+  try {
+    const { membre_id } = req.params;
+    const user = await getUserByMembreId(membre_id, req.dahira_id);
+    return success(res, user, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const activerUserController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await activerUser(id, req.dahira_id);
+    return success(res, user, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
 const createUserValidation = [
   body('nom').notEmpty().withMessage('Le nom est requis'),
   body('telephone').notEmpty().withMessage('Le téléphone est requis'),
@@ -66,11 +86,27 @@ const updateUserValidation = [
     .isIn(['membre', 'tresorier', 'bureau']).withMessage('Le rôle doit être membre, tresorier ou bureau')
 ];
 
+const updateMeController = async (req, res, next) => {
+  try {
+    const { nom, email, telephone } = req.body;
+    if (!nom || !nom.trim()) {
+      return error(res, 'Le nom est requis', 400);
+    }
+    const user = await updateMe(req.user.id, req.dahira_id, { nom: nom.trim(), email, telephone });
+    return success(res, user, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getAllUsersController,
+  getUserByMembreIdController,
   createUserController,
   updateUserController,
   desactiverUserController,
+  activerUserController,
+  updateMeController,
   createUserValidation,
-  updateUserValidation
+  updateUserValidation,
 };

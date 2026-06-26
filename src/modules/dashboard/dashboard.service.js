@@ -25,24 +25,27 @@ const getDashboardStats = async (dahiraId) => {
   );
 
   // Statistiques cotisations du mois en cours
-  const currentMonth = new Date().toISOString().slice(0, 7);
   const [cotisationsStats] = await pool.query(
-    `SELECT 
+    `SELECT
        COUNT(*) as total,
        SUM(montant) as montant_total,
        SUM(CASE WHEN statut = 'pending' THEN 1 ELSE 0 END) as en_attente,
        SUM(CASE WHEN statut = 'approved' THEN 1 ELSE 0 END) as approuvees
      FROM cotisations
-     WHERE dahira_id = ? AND mois_concerne = ?`,
-    [dahiraId, currentMonth]
+     WHERE dahira_id = ?
+       AND YEAR(created_at) = YEAR(NOW())
+       AND MONTH(created_at) = MONTH(NOW())`,
+    [dahiraId]
   );
 
   // Membres à jour vs en retard ce mois
   const [cotisationsAJour] = await pool.query(
     `SELECT COUNT(DISTINCT membre_id) as count
      FROM cotisations
-     WHERE dahira_id = ? AND mois_concerne = ? AND statut = 'approved'`,
-    [dahiraId, currentMonth]
+     WHERE dahira_id = ? AND statut = 'approved'
+       AND YEAR(created_at) = YEAR(NOW())
+       AND MONTH(created_at) = MONTH(NOW())`,
+    [dahiraId]
   );
 
   const membresAJour = cotisationsAJour[0].count;
@@ -50,7 +53,7 @@ const getDashboardStats = async (dahiraId) => {
 
   // Prochaine séance
   const [prochaineSeance] = await pool.query(
-    `SELECT id, type, date_seance, heure_debut, lieu
+    `SELECT id, type, date_seance
      FROM seances
      WHERE dahira_id = ? AND date_seance >= CURDATE()
      ORDER BY date_seance ASC
@@ -60,12 +63,12 @@ const getDashboardStats = async (dahiraId) => {
 
   // Dernière séance
   const [derniereSeance] = await pool.query(
-    `SELECT s.id, s.type, s.date_seance, 
+    `SELECT s.id, s.type, s.date_seance,
             COUNT(p.id) as presents
      FROM seances s
      LEFT JOIN presences p ON s.id = p.seance_id AND p.present = TRUE
      WHERE s.dahira_id = ? AND s.date_seance < NOW()
-     GROUP BY s.id
+     GROUP BY s.id, s.type, s.date_seance
      ORDER BY s.date_seance DESC
      LIMIT 1`,
     [dahiraId]
@@ -73,11 +76,19 @@ const getDashboardStats = async (dahiraId) => {
 
   // Événements à venir
   const [evenementsAVenir] = await pool.query(
-    `SELECT id, titre, date_debut, lieu
+    `SELECT id, titre, date_evenement, lieu
      FROM evenements
-     WHERE dahira_id = ? AND date_debut >= NOW()
-     ORDER BY date_debut ASC
-     LIMIT 3`,
+     WHERE dahira_id = ? AND date_evenement >= NOW()
+     ORDER BY date_evenement ASC
+     LIMIT 5`,
+    [dahiraId]
+  );
+
+  // Nombre total d'événements à venir (sans LIMIT)
+  const [evenementsTotal] = await pool.query(
+    `SELECT COUNT(*) as count
+     FROM evenements
+     WHERE dahira_id = ? AND date_evenement >= NOW()`,
     [dahiraId]
   );
 
@@ -94,14 +105,14 @@ const getDashboardStats = async (dahiraId) => {
 
   // Top 5 contributeurs du mois
   const [topContributeurs] = await pool.query(
-    `SELECT m.id, m.nom, m.prenom, m.photo_url, m.thumbnail_url,
+    `SELECT m.id, m.nom, m.prenom, m.photo_url,
             COUNT(c.id) as nb_cotisations,
             SUM(c.montant) as total_montant
      FROM membres m
      JOIN cotisations c ON m.id = c.membre_id
      WHERE c.dahira_id = ? AND c.statut = 'approved'
      AND DATE_FORMAT(c.created_at, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')
-     GROUP BY m.id
+     GROUP BY m.id, m.nom, m.prenom, m.photo_url
      ORDER BY total_montant DESC
      LIMIT 5`,
     [dahiraId]
@@ -146,6 +157,7 @@ const getDashboardStats = async (dahiraId) => {
       derniere: derniereSeance[0] || null
     },
     evenements_a_venir: evenementsAVenir,
+    evenements_a_venir_count: evenementsTotal[0].count,
     invitations_en_attente: invitations[0].count,
     top_contributeurs: topContributeurs,
     annonces_recentes: annonces
@@ -156,18 +168,18 @@ const getDashboardStats = async (dahiraId) => {
  * Graphiques pour le dashboard
  */
 const getDashboardCharts = async (dahiraId) => {
-  // Évolution trésorerie sur 6 mois
+  // Évolution trésorerie sur 12 mois
   const evolutionTresorerie = await getEvolution(dahiraId, 'mois');
 
-  // Évolution des cotisations sur 6 mois
+  // Évolution des cotisations sur 12 mois
   const [evolutionCotisations] = await pool.query(
-    `SELECT 
+    `SELECT
        DATE_FORMAT(created_at, '%Y-%m') as mois,
        COUNT(*) as nombre,
        SUM(montant) as montant
      FROM cotisations
      WHERE dahira_id = ? AND statut = 'approved'
-     AND created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+     AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
      GROUP BY DATE_FORMAT(created_at, '%Y-%m')
      ORDER BY mois ASC`,
     [dahiraId]
@@ -198,7 +210,7 @@ const getDashboardCharts = async (dahiraId) => {
      LEFT JOIN presences p ON s.id = p.seance_id
      WHERE s.dahira_id = ?
      AND s.date_seance < NOW()
-     GROUP BY s.id
+     GROUP BY s.id, s.type, s.date_seance
      ORDER BY s.date_seance DESC
      LIMIT 5`,
     [dahiraId, dahiraId]
@@ -212,7 +224,7 @@ const getDashboardCharts = async (dahiraId) => {
   }));
 
   return {
-    evolution_tresorerie: evolutionTresorerie.slice(-6),
+    evolution_tresorerie: evolutionTresorerie,
     evolution_cotisations: evolutionCotisations,
     repartition_paiement: repartitionPaiement,
     presences_seances: presencesAvecTaux.reverse()
@@ -275,12 +287,12 @@ const getComparativeStats = async (dahiraId) => {
 
   // Cotisations
   const [cotisationsCurrent] = await pool.query(
-    'SELECT COUNT(*) as count, SUM(montant) as montant FROM cotisations WHERE dahira_id = ? AND mois_concerne = ? AND statut = "approved"',
+    `SELECT COUNT(*) as count, SUM(montant) as montant FROM cotisations WHERE dahira_id = ? AND statut = 'approved' AND DATE_FORMAT(created_at, '%Y-%m') = ?`,
     [dahiraId, currentMonth]
   );
 
   const [cotisationsLast] = await pool.query(
-    'SELECT COUNT(*) as count, SUM(montant) as montant FROM cotisations WHERE dahira_id = ? AND mois_concerne = ? AND statut = "approved"',
+    `SELECT COUNT(*) as count, SUM(montant) as montant FROM cotisations WHERE dahira_id = ? AND statut = 'approved' AND DATE_FORMAT(created_at, '%Y-%m') = ?`,
     [dahiraId, lastMonthStr]
   );
 
@@ -303,12 +315,12 @@ const getComparativeStats = async (dahiraId) => {
 
   // Nouveaux membres
   const [membresCurrent] = await pool.query(
-    'SELECT COUNT(*) as count FROM membres WHERE dahira_id = ? AND DATE_FORMAT(created_at, "%Y-%m") = ?',
+    `SELECT COUNT(*) as count FROM membres WHERE dahira_id = ? AND DATE_FORMAT(created_at, '%Y-%m') = ?`,
     [dahiraId, currentMonth]
   );
 
   const [membresLast] = await pool.query(
-    'SELECT COUNT(*) as count FROM membres WHERE dahira_id = ? AND DATE_FORMAT(created_at, "%Y-%m") = ?',
+    `SELECT COUNT(*) as count FROM membres WHERE dahira_id = ? AND DATE_FORMAT(created_at, '%Y-%m') = ?`,
     [dahiraId, lastMonthStr]
   );
 

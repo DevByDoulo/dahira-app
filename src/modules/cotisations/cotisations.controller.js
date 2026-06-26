@@ -2,6 +2,7 @@ const {
   encaisserCotisation,
   encaisserCotisationsBatch,
   declarerCotisation,
+  getAllCotisations,
   getPendingCotisations,
   validerCotisation,
   rejeterCotisation,
@@ -53,6 +54,27 @@ const declarerCotisationController = async (req, res, next) => {
     next(err);
   }
 };
+
+const getAllCotisationsController = async (req, res, next) => {
+  try {
+    const { statut, seance_id, membre_id } = req.query;
+    const cotisations = await getAllCotisations(
+      req.dahira_id,
+      statut || null,
+      seance_id ? Number(seance_id) : null,
+      membre_id ? Number(membre_id) : null,
+    );
+    return success(res, cotisations, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getAllCotisationsValidation = [
+  query('statut').optional().isIn(['pending', 'approved', 'rejected']).withMessage('statut doit être pending, approved ou rejected'),
+  query('seance_id').optional().isInt({ min: 1 }).withMessage('seance_id doit être un entier positif'),
+  query('membre_id').optional().isInt({ min: 1 }).withMessage('membre_id doit être un entier positif')
+];
 
 const getPendingCotisationsController = async (req, res, next) => {
   try {
@@ -136,6 +158,7 @@ module.exports = {
   encaisserCotisationController,
   encaisserCotisationsBatchController,
   declarerCotisationController,
+  getAllCotisationsController,
   getPendingCotisationsController,
   validerCotisationController,
   rejeterCotisationController,
@@ -145,5 +168,6 @@ module.exports = {
   encaisserCotisationsBatchValidation,
   declarerCotisationValidation,
   rejeterCotisationValidation,
-  getDashboardValidation
+  getDashboardValidation,
+  getAllCotisationsValidation
 };

@@ -128,9 +128,55 @@ const desactiverUser = async (id, dahiraId) => {
   return updatedUser[0];
 };
 
+const getUserByMembreId = async (membreId, dahiraId) => {
+  const [rows] = await pool.query(
+    'SELECT id, nom, telephone, email, role, actif, membre_id, created_at FROM users WHERE membre_id = ? AND dahira_id = ?',
+    [membreId, dahiraId]
+  );
+  return rows[0] ?? null;
+};
+
+const activerUser = async (id, dahiraId) => {
+  const [existing] = await pool.query(
+    'SELECT id FROM users WHERE id = ? AND dahira_id = ?',
+    [id, dahiraId]
+  );
+  if (existing.length === 0) throw new Error('Utilisateur non trouvé');
+
+  await pool.query('UPDATE users SET actif = TRUE WHERE id = ? AND dahira_id = ?', [id, dahiraId]);
+
+  const [updatedUser] = await pool.query(
+    'SELECT id, nom, telephone, email, role, actif, membre_id, created_at FROM users WHERE id = ?',
+    [id]
+  );
+  return updatedUser[0];
+};
+
+const updateMe = async (userId, dahiraId, { nom, email, telephone }) => {
+  const [existing] = await pool.query(
+    'SELECT id FROM users WHERE id = ? AND dahira_id = ?',
+    [userId, dahiraId]
+  );
+  if (existing.length === 0) throw new Error('Utilisateur non trouvé');
+
+  await pool.query(
+    'UPDATE users SET nom = ?, email = ?, telephone = ? WHERE id = ? AND dahira_id = ?',
+    [nom, email || null, telephone || null, userId, dahiraId]
+  );
+
+  const [updated] = await pool.query(
+    'SELECT id, nom, telephone, email, role, actif, membre_id, created_at FROM users WHERE id = ?',
+    [userId]
+  );
+  return updated[0];
+};
+
 module.exports = {
   getAllUsers,
+  getUserByMembreId,
   createUser,
   updateUser,
-  desactiverUser
+  desactiverUser,
+  activerUser,
+  updateMe,
 };

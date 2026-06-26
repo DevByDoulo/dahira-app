@@ -20,8 +20,9 @@ const getAllMembres = async (dahiraId) => {
   const membresWithStatus = await Promise.all(
     membres.map(async (membre) => {
       const [cotisations] = await pool.query(
-        'SELECT id FROM cotisations WHERE membre_id = ? AND mois_concerne = ? LIMIT 1',
-        [membre.id, currentMonth]
+        `SELECT id FROM cotisations WHERE membre_id = ?
+         AND YEAR(created_at) = YEAR(NOW()) AND MONTH(created_at) = MONTH(NOW()) LIMIT 1`,
+        [membre.id]
       );
 
       return {
@@ -44,11 +45,35 @@ const getMembreById = async (id, dahiraId) => {
     throw new Error('Membre non trouvé');
   }
 
-  return rows[0];
+  const membre = rows[0];
+
+  const [cotisations] = await pool.query(
+    `SELECT id FROM cotisations WHERE membre_id = ?
+     AND YEAR(created_at) = YEAR(NOW()) AND MONTH(created_at) = MONTH(NOW()) LIMIT 1`,
+    [membre.id]
+  );
+
+  return {
+    ...membre,
+    statut_cotisation: cotisations.length > 0 ? 'a_jour' : 'en_retard',
+  };
 };
 
 const createMembre = async (dahiraId, membreData) => {
   const { nom, prenom, telephone, telephone_secours, photo_url, date_adhesion, responsabilites } = membreData;
+
+  // Vérifier l'unicité du téléphone au sein du dahira
+  if (telephone) {
+    const [existing] = await pool.query(
+      'SELECT id FROM membres WHERE telephone = ? AND dahira_id = ?',
+      [telephone, dahiraId]
+    );
+    if (existing.length > 0) {
+      const err = new Error("Duplicate entry '" + telephone + "' for key 'membres.telephone'");
+      err.code = 'ER_DUP_ENTRY';
+      throw err;
+    }
+  }
 
   const [result] = await pool.query(
     `INSERT INTO membres (dahira_id, nom, prenom, telephone, telephone_secours, photo_url, date_adhesion, responsabilites, actif)
