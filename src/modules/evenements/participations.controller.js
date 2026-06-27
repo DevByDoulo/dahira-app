@@ -5,47 +5,34 @@ const { body, validationResult } = require('express-validator');
 const toggleInscriptionController = async (req, res, next) => {
   try {
     const { id: evenementId } = req.params;
-    const membreId = req.user.membre_id;
+    const membreId = req.user.id;
 
-    if (!membreId) {
-      return error(res, 'Ce compte n\'est pas lié à un membre', 400);
-    }
-
-    // Verify evenement belongs to dahira
     const [evenement] = await pool.query(
-      'SELECT id FROM evenements WHERE id = ? AND dahira_id = ?',
-      [evenementId, req.dahira_id]
+      'SELECT id, inscriptions_ouvertes FROM evenements WHERE id = ? AND dahira_id = ?',
+      [evenementId, req.dahira_id],
     );
+    if (evenement.length === 0) return error(res, 'Événement non trouvé', 404);
+    if (!evenement[0].inscriptions_ouvertes) return error(res, 'Les inscriptions sont fermées', 400);
 
-    if (evenement.length === 0) {
-      return error(res, 'Événement non trouvé', 404);
-    }
-
-    // Check if participation exists
     const [existing] = await pool.query(
-      'SELECT id, inscrit FROM participations WHERE evenement_id = ? AND membre_id = ?',
-      [evenementId, membreId]
+      'SELECT id, statut FROM participations WHERE evenement_id = ? AND membre_id = ?',
+      [evenementId, membreId],
     );
 
-    let newInscrit;
+    let statut;
 
     if (existing.length > 0) {
-      // Toggle inscrit
-      newInscrit = !existing[0].inscrit;
-      await pool.query(
-        'UPDATE participations SET inscrit = ? WHERE id = ?',
-        [newInscrit, existing[0].id]
-      );
+      statut = existing[0].statut === 'annule' ? 'inscrit' : 'annule';
+      await pool.query('UPDATE participations SET statut = ? WHERE id = ?', [statut, existing[0].id]);
     } else {
-      // Create new participation with inscrit=TRUE
-      newInscrit = true;
+      statut = 'inscrit';
       await pool.query(
-        'INSERT INTO participations (evenement_id, membre_id, inscrit, present) VALUES (?, ?, TRUE, NULL)',
-        [evenementId, membreId]
+        'INSERT INTO participations (evenement_id, membre_id, dahira_id, statut) VALUES (?, ?, ?, ?)',
+        [evenementId, membreId, req.dahira_id, statut],
       );
     }
 
-    return success(res, { inscrit: newInscrit }, 200);
+    return success(res, { statut }, 200);
   } catch (err) {
     next(err);
   }
@@ -55,24 +42,19 @@ const getParticipantsController = async (req, res, next) => {
   try {
     const { id: evenementId } = req.params;
 
-    // Verify evenement belongs to dahira
     const [evenement] = await pool.query(
       'SELECT id FROM evenements WHERE id = ? AND dahira_id = ?',
-      [evenementId, req.dahira_id]
+      [evenementId, req.dahira_id],
     );
+    if (evenement.length === 0) return error(res, 'Événement non trouvé', 404);
 
-    if (evenement.length === 0) {
-      return error(res, 'Événement non trouvé', 404);
-    }
-
-    // Get participants (inscrit=TRUE OR present IS NOT NULL)
     const [participants] = await pool.query(
-      `SELECT p.membre_id, m.nom, m.prenom, p.inscrit, p.present
+      `SELECT p.membre_id, m.nom, m.prenom, p.statut
        FROM participations p
        JOIN membres m ON p.membre_id = m.id
-       WHERE p.evenement_id = ? AND (p.inscrit = TRUE OR p.present IS NOT NULL)
+       WHERE p.evenement_id = ? AND p.statut != 'annule'
        ORDER BY m.nom, m.prenom`,
-      [evenementId]
+      [evenementId],
     );
 
     return success(res, participants, 200);
@@ -84,86 +66,60 @@ const getParticipantsController = async (req, res, next) => {
 const updatePresenceController = async (req, res, next) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return error(res, errors.array()[0].msg, 400);
-    }
+    if (!errors.isEmpty()) return error(res, errors.array()[0].msg, 400);
 
     const { id: evenementId, membre_id } = req.params;
     const { present } = req.body;
 
-    // Verify evenement belongs to dahira
     const [evenement] = await pool.query(
       'SELECT id FROM evenements WHERE id = ? AND dahira_id = ?',
-      [evenementId, req.dahira_id]
+      [evenementId, req.dahira_id],
     );
+    if (evenement.length === 0) return error(res, 'Événement non trouvé', 404);
 
-    if (evenement.length === 0) {
-      return error(res, 'Événement non trouvé', 404);
-    }
-
-    // Verify membre belongs to dahira
     const [membre] = await pool.query(
       'SELECT id FROM membres WHERE id = ? AND dahira_id = ?',
-      [membre_id, req.dahira_id]
+      [membre_id, req.dahira_id],
     );
+    if (membre.length === 0) return error(res, 'Membre non trouvé', 404);
 
-    if (membre.length === 0) {
-      return error(res, 'Membre non trouvé', 404);
-    }
+    const statut = present ? 'present' : 'inscrit';
 
-    // Check if participation exists
     const [existing] = await pool.query(
       'SELECT id FROM participations WHERE evenement_id = ? AND membre_id = ?',
-      [evenementId, membre_id]
+      [evenementId, membre_id],
     );
 
-    let participation;
-
     if (existing.length > 0) {
-      // Update present
-      await pool.query(
-        'UPDATE participations SET present = ? WHERE id = ?',
-        [present, existing[0].id]
-      );
-
-      const [updated] = await pool.query(
-        `SELECT p.membre_id, m.nom, m.prenom, p.inscrit, p.present
-         FROM participations p
-         JOIN membres m ON p.membre_id = m.id
-         WHERE p.id = ?`,
-        [existing[0].id]
-      );
-      participation = updated[0];
+      await pool.query('UPDATE participations SET statut = ? WHERE id = ?', [statut, existing[0].id]);
     } else {
-      // Create new participation with inscrit=FALSE
       await pool.query(
-        'INSERT INTO participations (evenement_id, membre_id, inscrit, present) VALUES (?, ?, FALSE, ?)',
-        [evenementId, membre_id, present]
+        'INSERT INTO participations (evenement_id, membre_id, dahira_id, statut) VALUES (?, ?, ?, ?)',
+        [evenementId, membre_id, req.dahira_id, statut],
       );
-
-      const [created] = await pool.query(
-        `SELECT p.membre_id, m.nom, m.prenom, p.inscrit, p.present
-         FROM participations p
-         JOIN membres m ON p.membre_id = m.id
-         WHERE p.evenement_id = ? AND p.membre_id = ?`,
-        [evenementId, membre_id]
-      );
-      participation = created[0];
     }
 
-    return success(res, participation, 200);
+    const [updated] = await pool.query(
+      `SELECT p.membre_id, m.nom, m.prenom, p.statut
+       FROM participations p
+       JOIN membres m ON p.membre_id = m.id
+       WHERE p.evenement_id = ? AND p.membre_id = ?`,
+      [evenementId, membre_id],
+    );
+
+    return success(res, updated[0], 200);
   } catch (err) {
     next(err);
   }
 };
 
 const updatePresenceValidation = [
-  body('present').isBoolean().withMessage('Le champ present doit être un booléen')
+  body('present').isBoolean().withMessage('Le champ present doit être un booléen'),
 ];
 
 module.exports = {
   toggleInscriptionController,
   getParticipantsController,
   updatePresenceController,
-  updatePresenceValidation
+  updatePresenceValidation,
 };

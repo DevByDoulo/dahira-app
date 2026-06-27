@@ -92,14 +92,12 @@ app.use('/api/dahiras', require('./modules/dahiras/dahiras.routes'));
 
 // Routes API protégées (auth + tenant middleware dans les routes)
 app.use('/api/membres', require('./modules/membres/membres.routes'));
-app.use('/api/users', require('./modules/users/users.routes'));
 app.use('/api/seances', require('./modules/seances/seances.routes'));
 app.use('/api/cotisations', require('./modules/cotisations/cotisations.routes'));
 app.use('/api/annonces', require('./modules/annonces/annonces.routes'));
 app.use('/api/evenements', require('./modules/evenements/evenements.routes'));
 app.use('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
 app.use('/api/tresorerie', require('./modules/tresorerie/tresorerie.routes'));
-app.use('/api/presences', require('./modules/presences/presences.routes'));
 app.use('/api/recus', require('./modules/recus/recus.routes'));
 app.use('/api/notifications', require('./modules/notifications/notifications.routes'));
 app.use('/api/depenses', require('./modules/depenses/depenses.routes'));

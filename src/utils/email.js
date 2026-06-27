@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const { FRONTEND_URL } = require('../config/app');
 
 // Configuration du transporteur d'email
 const createTransporter = () => {
@@ -258,7 +259,7 @@ const sendNotificationEmail = async (toEmail, title, message, link) => {
             <p>${message}</p>
             ${link ? `
               <div style="text-align: center;">
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}${link}" class="button">Voir plus</a>
+                <a href="${FRONTEND_URL}${link}" class="button">Voir plus</a>
               </div>
             ` : ''}
           </div>

@@ -41,11 +41,11 @@ const getAllDepenses = async (dahiraId, filters = {}) => {
 
   let query = `
     SELECT d.*, 
-           u1.nom as cree_par_nom,
-           u2.nom as valide_par_nom
+           m1.nom as cree_par_nom,
+           m2.nom as valide_par_nom
     FROM depenses d
-    LEFT JOIN users u1 ON d.cree_par = u1.id
-    LEFT JOIN users u2 ON d.valide_par = u2.id
+    LEFT JOIN membres m1 ON d.cree_par = m1.id
+    LEFT JOIN membres m2 ON d.valide_par = m2.id
     WHERE d.dahira_id = ?
   `;
 
@@ -113,8 +113,8 @@ const getDepenseById = async (id, dahiraId) => {
             u1.nom as cree_par_nom,
             u2.nom as valide_par_nom
      FROM depenses d
-     LEFT JOIN users u1 ON d.cree_par = u1.id
-     LEFT JOIN users u2 ON d.valide_par = u2.id
+     LEFT JOIN membres m1 ON d.cree_par = m1.id
+     LEFT JOIN membres m2 ON d.valide_par = m2.id
      WHERE d.id = ? AND d.dahira_id = ?`,
     [id, dahiraId]
   );

@@ -63,23 +63,20 @@ const getDashboardStats = async (dahiraId) => {
 
   // Dernière séance
   const [derniereSeance] = await pool.query(
-    `SELECT s.id, s.type, s.date_seance,
-            COUNT(p.id) as presents
-     FROM seances s
-     LEFT JOIN presences p ON s.id = p.seance_id AND p.present = TRUE
-     WHERE s.dahira_id = ? AND s.date_seance < NOW()
-     GROUP BY s.id, s.type, s.date_seance
-     ORDER BY s.date_seance DESC
+    `SELECT id, type, date_seance
+     FROM seances
+     WHERE dahira_id = ? AND date_seance < NOW()
+     ORDER BY date_seance DESC
      LIMIT 1`,
     [dahiraId]
   );
 
   // Événements à venir
   const [evenementsAVenir] = await pool.query(
-    `SELECT id, titre, date_evenement, lieu
+    `SELECT id, titre, date_debut, lieu
      FROM evenements
-     WHERE dahira_id = ? AND date_evenement >= NOW()
-     ORDER BY date_evenement ASC
+     WHERE dahira_id = ? AND date_debut >= NOW()
+     ORDER BY date_debut ASC
      LIMIT 5`,
     [dahiraId]
   );
@@ -88,7 +85,7 @@ const getDashboardStats = async (dahiraId) => {
   const [evenementsTotal] = await pool.query(
     `SELECT COUNT(*) as count
      FROM evenements
-     WHERE dahira_id = ? AND date_evenement >= NOW()`,
+     WHERE dahira_id = ? AND date_debut >= NOW()`,
     [dahiraId]
   );
 
@@ -198,36 +195,21 @@ const getDashboardCharts = async (dahiraId) => {
     [dahiraId]
   );
 
-  // Taux de présence sur les 5 dernières séances
-  const [presencesSeances] = await pool.query(
-    `SELECT 
-       s.id,
-       s.type,
-       s.date_seance,
-       COUNT(DISTINCT CASE WHEN p.present = TRUE THEN p.membre_id END) as presents,
-       (SELECT COUNT(*) FROM membres WHERE dahira_id = ? AND actif = TRUE) as total_membres
-     FROM seances s
-     LEFT JOIN presences p ON s.id = p.seance_id
-     WHERE s.dahira_id = ?
-     AND s.date_seance < NOW()
-     GROUP BY s.id, s.type, s.date_seance
-     ORDER BY s.date_seance DESC
+  // 5 dernières séances
+  const [dernieresSeances] = await pool.query(
+    `SELECT id, type, date_seance, lieu, theme
+     FROM seances
+     WHERE dahira_id = ? AND date_seance < NOW()
+     ORDER BY date_seance DESC
      LIMIT 5`,
-    [dahiraId, dahiraId]
+    [dahiraId]
   );
-
-  const presencesAvecTaux = presencesSeances.map(s => ({
-    ...s,
-    taux_presence: s.total_membres > 0 
-      ? ((s.presents / s.total_membres) * 100).toFixed(1)
-      : 0
-  }));
 
   return {
     evolution_tresorerie: evolutionTresorerie,
     evolution_cotisations: evolutionCotisations,
     repartition_paiement: repartitionPaiement,
-    presences_seances: presencesAvecTaux.reverse()
+    dernieres_seances: dernieresSeances.reverse()
   };
 };
 

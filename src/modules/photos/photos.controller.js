@@ -50,10 +50,7 @@ const uploadMembreMeController = async (req, res, next) => {
     if (!req.file) {
       return error(res, 'Aucun fichier fourni', 400);
     }
-    if (!req.user.membre_id) {
-      return error(res, "Ce compte n'est pas lié à un membre", 400);
-    }
-    const result = await uploadMembrePhoto(req.user.membre_id, req.dahira_id, req.file);
+    const result = await uploadMembrePhoto(req.user.id, req.dahira_id, req.file);
     return success(res, result, 200);
   } catch (err) {
     next(err);

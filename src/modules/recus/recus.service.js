@@ -150,10 +150,9 @@ const envoyerRecuEmail = async (cotisationId, dahiraId) => {
 
   // Récupérer l'email du membre
   const [cotisation] = await pool.query(
-    `SELECT m.nom, m.prenom, u.email
+    `SELECT m.nom, m.prenom, m.email
      FROM cotisations c
      JOIN membres m ON c.membre_id = m.id
-     LEFT JOIN users u ON m.id = u.membre_id
      WHERE c.id = ? AND c.dahira_id = ?`,
     [cotisationId, dahiraId]
   );
@@ -235,12 +234,10 @@ const getRecusDahira = async (dahiraId) => {
   const [recus] = await pool.query(
     `SELECT r.id, r.cotisation_id, r.dahira_id, r.numero_recu, r.fichier_path,
             c.montant, c.mode_paiement, c.created_at as date_cotisation,
-            m.nom, m.prenom, m.telephone,
-            u.email
+            m.nom, m.prenom, m.telephone, m.email
      FROM recus r
      JOIN cotisations c ON r.cotisation_id = c.id
      JOIN membres m ON c.membre_id = m.id
-     LEFT JOIN users u ON m.id = u.membre_id
      WHERE r.dahira_id = ?
      ORDER BY c.created_at DESC`,
     [dahiraId]

@@ -112,7 +112,7 @@ const deleteMembrePhoto = async (membreId, dahiraId) => {
 const uploadUserPhoto = async (userId, file) => {
   // Vérifier que l'utilisateur existe
   const [user] = await pool.query(
-    'SELECT id, photo_url FROM users WHERE id = ?',
+    'SELECT id, photo_url FROM membres WHERE id = ?',
     [userId]
   );
 
@@ -155,7 +155,7 @@ const uploadUserPhoto = async (userId, file) => {
 
     // Mettre à jour la base de données
     await pool.query(
-      'UPDATE users SET photo_url = ?, thumbnail_url = ? WHERE id = ?',
+      'UPDATE membres SET photo_url = ?, thumbnail_url = ? WHERE id = ?',
       [photoUrl, thumbnailUrl, userId]
     );
 
@@ -192,11 +192,11 @@ const uploadUserPhoto = async (userId, file) => {
  */
 const getGaleriePhotos = async (dahiraId) => {
   const [photos] = await pool.query(
-    `SELECT p.*, e.titre as evenement_titre, e.date_evenement, e.lieu as evenement_lieu,
-            u.nom as uploader_nom
+    `SELECT p.*, e.titre as evenement_titre, e.date_debut as evenement_date, e.lieu as evenement_lieu,
+            m_up.nom as uploader_nom
      FROM photos p
      LEFT JOIN evenements e ON p.evenement_id = e.id
-     LEFT JOIN users u ON p.uploaded_by = u.id
+     LEFT JOIN membres m_up ON p.uploaded_by = m_up.id
      WHERE p.dahira_id = ?
      ORDER BY p.evenement_id DESC, p.created_at DESC`,
     [dahiraId]

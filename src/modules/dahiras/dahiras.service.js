@@ -74,7 +74,7 @@ const getDahiraById = async (id) => {
   const [stats] = await pool.query(
     `SELECT 
        (SELECT COUNT(*) FROM membres WHERE dahira_id = ? AND actif = TRUE) as total_membres,
-       (SELECT COUNT(*) FROM users WHERE dahira_id = ? AND actif = TRUE) as total_users,
+       (SELECT COUNT(*) FROM membres WHERE dahira_id = ? AND actif = TRUE AND password_hash IS NOT NULL) as total_users,
        (SELECT COUNT(*) FROM seances WHERE dahira_id = ?) as total_seances,
        (SELECT SUM(montant) FROM cotisations WHERE dahira_id = ? AND statut = 'approved') as total_cotisations`,
     [id, id, id, id]

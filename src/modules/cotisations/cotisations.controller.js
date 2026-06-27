@@ -48,7 +48,7 @@ const declarerCotisationController = async (req, res, next) => {
       return error(res, errors.array()[0].msg, 400);
     }
 
-    const cotisation = await declarerCotisation(req.dahira_id, req.user.membre_id, req.body, req.user.id);
+    const cotisation = await declarerCotisation(req.dahira_id, req.user.id, req.body, req.user.id);
     return success(res, cotisation, 201);
   } catch (err) {
     next(err);
@@ -108,7 +108,7 @@ const rejeterCotisationController = async (req, res, next) => {
 
 const getMesCotisationsController = async (req, res, next) => {
   try {
-    const cotisations = await getMesCotisations(req.dahira_id, req.user.membre_id);
+    const cotisations = await getMesCotisations(req.dahira_id, req.user.id);
     return success(res, cotisations, 200);
   } catch (err) {
     next(err);

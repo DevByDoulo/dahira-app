@@ -15,7 +15,7 @@ const UPLOADS_BASE = path.resolve(__dirname, '..', '..', '..', 'uploads');
 
 const getAllEvenementsController = async (req, res, next) => {
   try {
-    const evenements = await getAllEvenements(req.dahira_id, req.user.membre_id);
+    const evenements = await getAllEvenements(req.dahira_id, req.user.id);
     return success(res, evenements, 200);
   } catch (err) {
     next(err);
@@ -25,7 +25,7 @@ const getAllEvenementsController = async (req, res, next) => {
 const getEvenementByIdController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const evenement = await getEvenementById(id, req.dahira_id, req.user.membre_id);
+    const evenement = await getEvenementById(id, req.dahira_id, req.user.id);
     return success(res, evenement, 200);
   } catch (err) {
     next(err);
@@ -109,20 +109,18 @@ const uploadEvenementPhotoController = async (req, res, next) => {
 
 const createEvenementValidation = [
   body('titre').notEmpty().withMessage('Le titre est requis'),
-  body('date_evenement').notEmpty().withMessage('La date de l\'événement est requise'),
+  body('date_debut').notEmpty().withMessage('La date de l\'événement est requise'),
   body('description').optional(),
-  body('heure').optional(),
   body('lieu').optional(),
-  body('type').optional().isIn(['gamou', 'conference', 'sortie', 'ceremonie', 'autre']).withMessage('Type invalide'),
+  body('type').optional().isIn(['conference', 'sortie', 'ceremonie', 'formation', 'autre']).withMessage('Type invalide'),
 ];
 
 const updateEvenementValidation = [
   body('titre').notEmpty().withMessage('Le titre est requis'),
-  body('date_evenement').notEmpty().withMessage('La date de l\'événement est requise'),
+  body('date_debut').notEmpty().withMessage('La date de l\'événement est requise'),
   body('description').optional(),
-  body('heure').optional(),
   body('lieu').optional(),
-  body('photo_url').optional()
+  body('image_url').optional()
 ];
 
 module.exports = {

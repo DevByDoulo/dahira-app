@@ -81,9 +81,9 @@ const encaisserCotisationsBatch = async (dahiraId, cotisationsData, userId) => {
       }
 
       const [result] = await connection.query(
-        `INSERT INTO cotisations (dahira_id, membre_id, seance_id, montant, mode_paiement, note, statut, declare_par, valide_par, valide_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'approved', NULL, ?, NOW())`,
-        [dahiraId, membre_id, seance_id, montant, mode_paiement, note, userId]
+        `INSERT INTO cotisations (dahira_id, membre_id, seance_id, montant, mode_paiement, note, statut, valide_par, valide_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, NOW())`,
+        [dahiraId, membre_id, seance_id, montant, mode_paiement, note || null, userId]
       );
 
       const [newCotisation] = await connection.query(
@@ -132,9 +132,9 @@ const declarerCotisation = async (dahiraId, membreId, cotisationData, userId) =>
   }
 
   const [result] = await pool.query(
-    `INSERT INTO cotisations (dahira_id, membre_id, seance_id, montant, mode_paiement, note, statut, declare_par, valide_par, valide_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, NULL, NULL)`,
-    [dahiraId, membreId, seance_id, montant, mode_paiement, note, userId]
+    `INSERT INTO cotisations (dahira_id, membre_id, seance_id, montant, mode_paiement, note, statut)
+     VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
+    [dahiraId, membreId, seance_id, montant, mode_paiement, note || null]
   );
 
   const [newCotisation] = await pool.query(

@@ -22,28 +22,21 @@ const uploadAnnonceImage = async (file, baseUrl) => {
 };
 
 const getAllAnnonces = async (dahiraId, userRole) => {
-  let query = `SELECT a.*, u.nom as publie_par_nom
+  const query = `SELECT a.*, m.nom as publie_par_nom
                FROM annonces a
-               LEFT JOIN users u ON a.publie_par = u.id
-               WHERE a.dahira_id = ?`;
-  const params = [dahiraId];
+               LEFT JOIN membres m ON a.publie_par = m.id
+               WHERE a.dahira_id = ?
+               ORDER BY a.created_at DESC`;
 
-  // Normal members only see annonces where cible_groupe IS NULL
-  if (userRole === 'membre') {
-    query += ` AND (a.cible_groupe IS NULL OR a.cible_groupe = '')`;
-  }
-
-  query += ` ORDER BY a.epinglee DESC, a.created_at DESC`;
-
-  const [annonces] = await pool.query(query, params);
+  const [annonces] = await pool.query(query, [dahiraId]);
   return annonces;
 };
 
 const getAnnonceById = async (id, dahiraId) => {
   const [annonces] = await pool.query(
-    `SELECT a.*, u.nom as publie_par_nom
+    `SELECT a.*, m.nom as publie_par_nom
      FROM annonces a
-     LEFT JOIN users u ON a.publie_par = u.id
+     LEFT JOIN membres m ON a.publie_par = m.id
      WHERE a.id = ? AND a.dahira_id = ?`,
     [id, dahiraId]
   );
@@ -65,9 +58,9 @@ const createAnnonce = async (dahiraId, annonceData, userId) => {
   );
 
   const [newAnnonce] = await pool.query(
-    `SELECT a.*, u.nom as publie_par_nom
+    `SELECT a.*, m.nom as publie_par_nom
      FROM annonces a
-     LEFT JOIN users u ON a.publie_par = u.id
+     LEFT JOIN membres m ON a.publie_par = m.id
      WHERE a.id = ?`,
     [result.insertId]
   );
@@ -96,9 +89,9 @@ const updateAnnonce = async (id, dahiraId, annonceData) => {
   );
 
   const [updatedAnnonce] = await pool.query(
-    `SELECT a.*, u.nom as publie_par_nom
+    `SELECT a.*, m.nom as publie_par_nom
      FROM annonces a
-     LEFT JOIN users u ON a.publie_par = u.id
+     LEFT JOIN membres m ON a.publie_par = m.id
      WHERE a.id = ?`,
     [id]
   );
@@ -144,9 +137,9 @@ const toggleEpinglee = async (id, dahiraId) => {
   );
 
   const [updatedAnnonce] = await pool.query(
-    `SELECT a.*, u.nom as publie_par_nom
+    `SELECT a.*, m.nom as publie_par_nom
      FROM annonces a
-     LEFT JOIN users u ON a.publie_par = u.id
+     LEFT JOIN membres m ON a.publie_par = m.id
      WHERE a.id = ?`,
     [id]
   );

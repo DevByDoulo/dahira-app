@@ -11,8 +11,8 @@ const getStats = async () => {
 
   const [[userStats]] = await pool.query(`
     SELECT COUNT(*) AS total_users
-    FROM users
-    WHERE role != 'super_admin'
+    FROM membres
+    WHERE role != 'super_admin' AND password_hash IS NOT NULL
   `);
 
   return {
@@ -37,7 +37,7 @@ const getAllDahiras = async () => {
       COUNT(DISTINCT u.id) AS total_users
     FROM dahiras d
     LEFT JOIN membres m ON m.dahira_id = d.id AND m.actif = 1
-    LEFT JOIN users   u ON u.dahira_id = d.id AND u.role != 'super_admin'
+    LEFT JOIN membres u ON u.dahira_id = d.id AND u.role != 'super_admin' AND u.password_hash IS NOT NULL
     GROUP BY d.id, d.nom, d.email, d.telephone, d.adresse, d.actif, d.created_at
     ORDER BY d.created_at DESC
   `);
@@ -65,7 +65,7 @@ const getDahiraById = async (id) => {
       COUNT(DISTINCT u.id) AS total_users
     FROM dahiras d
     LEFT JOIN membres m ON m.dahira_id = d.id
-    LEFT JOIN users   u ON u.dahira_id = d.id AND u.role != 'super_admin'
+    LEFT JOIN membres u ON u.dahira_id = d.id AND u.role != 'super_admin' AND u.password_hash IS NOT NULL
     WHERE d.id = ?
     GROUP BY d.id, d.nom, d.email, d.telephone, d.adresse, d.description, d.actif, d.created_at
   `, [id]);

@@ -92,7 +92,7 @@ const resendInvitationController = async (req, res, next) => {
 const createInvitationValidation = [
   body('membre_id').isInt({ min: 1 }).withMessage('ID du membre requis'),
   body('email').isEmail().withMessage('Email valide requis'),
-  body('role').optional().isIn(['membre', 'tresorier', 'bureau']).withMessage('Rôle invalide')
+  body('role').optional().isIn(['membre', 'tresorier', 'responsable_org', 'bureau']).withMessage('Rôle invalide')
 ];
 
 const acceptInvitationValidation = [

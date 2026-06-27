@@ -4,8 +4,8 @@ require('dotenv').config();
 
 const PORT = process.env.PORT || 3000;
 
-const server = app.listen(PORT, () => {
-  console.log(`Serveur démarré sur le port ${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Serveur démarré sur le port ${PORT} (réseau local accessible)`);
 });
 
 // Gestion d'erreurs au démarrage du serveur
