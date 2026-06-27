@@ -2,333 +2,234 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 const { FRONTEND_URL } = require('../config/app');
 
-// Configuration du transporteur d'email
-const createTransporter = () => {
-  return nodemailer.createTransport({
+const createTransporter = () =>
+  nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE === 'true', // true pour 465, false pour d'autres ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
-};
 
-/**
- * Envoie un email d'invitation à un membre
- * @param {string} toEmail - Email du destinataire
- * @param {string} toName - Nom du destinataire
- * @param {string} invitationLink - Lien d'invitation
- * @param {string} dahiraName - Nom du Dahira
- * @param {string} invitedBy - Nom de la personne qui invite
- */
+// ── Template de base ──────────────────────────────────────────────────────────
+
+const baseTemplate = ({ color, title, body, footer }) => `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <!-- En-tête marque -->
+          <tr>
+            <td style="padding:0 0 24px 0;">
+              <p style="margin:0;font-size:13px;font-weight:600;color:#71717a;letter-spacing:0.08em;text-transform:uppercase;">
+                Dahira App
+              </p>
+              <div style="margin-top:6px;height:2px;width:32px;background:${color};border-radius:2px;"></div>
+            </td>
+          </tr>
+
+          <!-- Carte principale -->
+          <tr>
+            <td style="background:#ffffff;border-radius:8px;border-top:3px solid ${color};padding:36px 40px;">
+              ${body}
+            </td>
+          </tr>
+
+          <!-- Pied de page -->
+          <tr>
+            <td style="padding:24px 0 0 0;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#a1a1aa;line-height:1.6;">
+                ${footer || 'Cet email a été envoyé automatiquement — merci de ne pas y répondre.'}
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+
+// ── Styles réutilisables ──────────────────────────────────────────────────────
+
+const greeting = (name) =>
+  `<p style="margin:0 0 20px;font-size:15px;color:#3f3f46;">Assalamu alaykum <strong>${name}</strong>,</p>`;
+
+const paragraph = (text) =>
+  `<p style="margin:0 0 16px;font-size:15px;color:#52525b;line-height:1.7;">${text}</p>`;
+
+const ctaLink = (href, label, color) => `
+  <p style="margin:28px 0;">
+    <a href="${href}"
+       style="color:${color};font-size:15px;font-weight:600;text-decoration:none;">
+      → ${label}
+    </a>
+  </p>
+`;
+
+const urlBox = (url) =>
+  `<p style="margin:0 0 20px;font-size:12px;color:#a1a1aa;word-break:break-all;background:#fafafa;border:1px solid #e4e4e7;border-radius:4px;padding:10px 14px;">${url}</p>`;
+
+const alertBox = (text) =>
+  `<p style="margin:20px 0 0;font-size:13px;color:#78716c;background:#fafaf9;border-left:3px solid #d4d4d8;padding:10px 14px;border-radius:0 4px 4px 0;">${text}</p>`;
+
+const divider = () =>
+  `<hr style="border:none;border-top:1px solid #f4f4f5;margin:24px 0;" />`;
+
+const signOff = () =>
+  `<p style="margin:0;font-size:14px;color:#71717a;">Barak Allahu fik,<br><strong style="color:#3f3f46;">L'équipe Dahira App</strong></p>`;
+
+// ── Emails ────────────────────────────────────────────────────────────────────
+
 const sendInvitationEmail = async (toEmail, toName, invitationLink, dahiraName, invitedBy) => {
-  const transporter = createTransporter();
+  const color = '#16a34a';
 
-  const mailOptions = {
+  const html = baseTemplate({
+    color,
+    title: `Invitation à rejoindre ${dahiraName}`,
+    body: `
+      ${greeting(toName)}
+      ${paragraph(`<strong>${invitedBy}</strong> vous invite à rejoindre <strong>${dahiraName}</strong> sur l'application de gestion Dahira.`)}
+      ${paragraph('Cliquez sur le lien ci-dessous pour accepter cette invitation et créer votre compte :')}
+      ${ctaLink(invitationLink, "Accepter l'invitation", color)}
+      ${urlBox(invitationLink)}
+      ${alertBox('Ce lien est valide pendant <strong>7 jours</strong> et ne peut être utilisé qu\'une seule fois.')}
+      ${divider()}
+      ${signOff()}
+    `,
+  });
+
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
     from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
     to: toEmail,
     subject: `Invitation à rejoindre ${dahiraName}`,
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
-          .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
-          .button { display: inline-block; padding: 12px 30px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-          .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
-          .warning { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🌙 Invitation à rejoindre un Dahira</h1>
-          </div>
-          <div class="content">
-            <p>Assalamu alaykum <strong>${toName}</strong>,</p>
-            
-            <p><strong>${invitedBy}</strong> vous invite à rejoindre <strong>${dahiraName}</strong> sur l'application de gestion Dahira.</p>
-            
-            <p>Pour accepter cette invitation et créer votre compte, cliquez sur le bouton ci-dessous :</p>
-            
-            <div style="text-align: center;">
-              <a href="${invitationLink}" class="button">Accepter l'invitation</a>
-            </div>
-            
-            <p>Ou copiez ce lien dans votre navigateur :</p>
-            <p style="word-break: break-all; background-color: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 3px;">
-              ${invitationLink}
-            </p>
-            
-            <div class="warning">
-              <strong>⚠️ Important :</strong> Ce lien d'invitation est valide pendant <strong>7 jours</strong> et ne peut être utilisé qu'une seule fois.
-            </div>
-            
-            <p>Si vous n'avez pas demandé cette invitation, vous pouvez ignorer cet email en toute sécurité.</p>
-            
-            <p>Barak Allahu fik,<br>
-            L'équipe Dahira App</p>
-          </div>
-          <div class="footer">
-            <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
-  };
+    html,
+  });
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email d\'invitation envoyé:', info.messageId);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email:', error);
-    throw new Error('Impossible d\'envoyer l\'email d\'invitation');
-  }
-};
-
-/**
- * Envoie un email de confirmation d'inscription
- * @param {string} toEmail - Email du destinataire
- * @param {string} toName - Nom du destinataire
- * @param {string} dahiraName - Nom du Dahira
- */
-const sendWelcomeEmail = async (toEmail, toName, dahiraName) => {
-  const transporter = createTransporter();
-
-  const mailOptions = {
-    from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
-    to: toEmail,
-    subject: `Bienvenue sur ${dahiraName}`,
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
-          .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
-          .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🎉 Bienvenue !</h1>
-          </div>
-          <div class="content">
-            <p>Assalamu alaykum <strong>${toName}</strong>,</p>
-            
-            <p>Votre compte a été créé avec succès ! Vous êtes maintenant membre de <strong>${dahiraName}</strong>.</p>
-            
-            <p>Vous pouvez dès maintenant vous connecter à l'application avec votre numéro de téléphone et le mot de passe que vous avez défini.</p>
-            
-            <p>N'hésitez pas à contacter les responsables de votre Dahira si vous avez des questions.</p>
-            
-            <p>Barak Allahu fik,<br>
-            L'équipe Dahira App</p>
-          </div>
-          <div class="footer">
-            <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
-  };
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email de bienvenue envoyé:', info.messageId);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email de bienvenue:', error);
-    // Ne pas bloquer l'inscription si l'email de bienvenue échoue
-    return { success: false, error: error.message };
-  }
-};
-
-/**
- * Envoie un email de réinitialisation de mot de passe
- */
-const sendPasswordResetEmail = async (toEmail, toName, resetLink) => {
-  const transporter = createTransporter();
-
-  const mailOptions = {
-    from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
-    to: toEmail,
-    subject: 'Réinitialisation de votre mot de passe',
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #e74c3c; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
-          .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
-          .button { display: inline-block; padding: 12px 30px; background-color: #e74c3c; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-          .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
-          .warning { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🔒 Réinitialisation de mot de passe</h1>
-          </div>
-          <div class="content">
-            <p>Assalamu alaykum <strong>${toName}</strong>,</p>
-            
-            <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
-            
-            <p>Pour créer un nouveau mot de passe, cliquez sur le bouton ci-dessous :</p>
-            
-            <div style="text-align: center;">
-              <a href="${resetLink}" class="button">Réinitialiser mon mot de passe</a>
-            </div>
-            
-            <p>Ou copiez ce lien dans votre navigateur :</p>
-            <p style="word-break: break-all; background-color: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 3px;">
-              ${resetLink}
-            </p>
-            
-            <div class="warning">
-              <strong>⚠️ Important :</strong> Ce lien est valide pendant <strong>1 heure</strong> seulement.
-            </div>
-            
-            <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email. Votre mot de passe actuel restera inchangé.</p>
-            
-            <p>Barak Allahu fik,<br>
-            L'équipe Dahira App</p>
-          </div>
-          <div class="footer">
-            <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
-  };
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email de réinitialisation envoyé:', info.messageId);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email:', error);
-    throw new Error('Impossible d\'envoyer l\'email de réinitialisation');
-  }
-};
-
-/**
- * Envoie une notification par email
- */
-const sendNotificationEmail = async (toEmail, title, message, link) => {
-  const transporter = createTransporter();
-
-  const mailOptions = {
-    from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
-    to: toEmail,
-    subject: title,
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #3498db; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
-          .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
-          .button { display: inline-block; padding: 12px 30px; background-color: #3498db; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🔔 ${title}</h1>
-          </div>
-          <div class="content">
-            <p>${message}</p>
-            ${link ? `
-              <div style="text-align: center;">
-                <a href="${FRONTEND_URL}${link}" class="button">Voir plus</a>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      </body>
-      </html>
-    `
-  };
-
-  const info = await transporter.sendMail(mailOptions);
+  console.log('Email d\'invitation envoyé:', info.messageId);
   return { success: true, messageId: info.messageId };
 };
 
-/**
- * Envoie un reçu de cotisation par email
- */
-const sendRecuEmail = async (toEmail, toName, recuNumber, pdfPath) => {
-  const transporter = createTransporter();
+const sendWelcomeEmail = async (toEmail, toName, dahiraName) => {
+  const color = '#16a34a';
 
-  const mailOptions = {
+  const html = baseTemplate({
+    color,
+    title: `Bienvenue sur ${dahiraName}`,
+    body: `
+      ${greeting(toName)}
+      ${paragraph(`Votre compte a été créé avec succès. Vous êtes désormais membre de <strong>${dahiraName}</strong>.`)}
+      ${paragraph('Vous pouvez dès maintenant vous connecter à l\'application avec votre email et le mot de passe que vous avez défini.')}
+      ${paragraph('N\'hésitez pas à contacter les responsables de votre Dahira si vous avez des questions.')}
+      ${divider()}
+      ${signOff()}
+    `,
+  });
+
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
     from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
     to: toEmail,
-    subject: `Reçu de cotisation - ${recuNumber}`,
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #27ae60; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
-          .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>📄 Reçu de Cotisation</h1>
-          </div>
-          <div class="content">
-            <p>Assalamu alaykum <strong>${toName}</strong>,</p>
-            
-            <p>Votre cotisation a été enregistrée avec succès.</p>
-            
-            <p>Vous trouverez ci-joint votre reçu de paiement (N° <strong>${recuNumber}</strong>).</p>
-            
-            <p>Barak Allahu fik pour votre contribution,<br>
-            L'équipe Dahira App</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-    attachments: [
-      {
-        filename: `${recuNumber}.pdf`,
-        path: pdfPath
-      }
-    ]
-  };
+    subject: `Bienvenue dans ${dahiraName}`,
+    html,
+  });
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Reçu envoyé par email:', info.messageId);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('Erreur lors de l\'envoi du reçu:', error);
-    throw new Error('Impossible d\'envoyer le reçu par email');
-  }
+  console.log('Email de bienvenue envoyé:', info.messageId);
+  return { success: true, messageId: info.messageId };
+};
+
+const sendPasswordResetEmail = async (toEmail, toName, resetLink) => {
+  const color = '#dc2626';
+
+  const html = baseTemplate({
+    color,
+    title: 'Réinitialisation de votre mot de passe',
+    body: `
+      ${greeting(toName)}
+      ${paragraph('Vous avez demandé la réinitialisation de votre mot de passe.')}
+      ${paragraph('Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :')}
+      ${ctaLink(resetLink, 'Réinitialiser mon mot de passe', color)}
+      ${urlBox(resetLink)}
+      ${alertBox('Ce lien est valide pendant <strong>1 heure</strong> seulement. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet email.')}
+      ${divider()}
+      ${signOff()}
+    `,
+  });
+
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
+    from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: 'Réinitialisation de votre mot de passe',
+    html,
+  });
+
+  console.log('Email de réinitialisation envoyé:', info.messageId);
+  return { success: true, messageId: info.messageId };
+};
+
+const sendNotificationEmail = async (toEmail, title, message, link) => {
+  const color = '#2563eb';
+
+  const html = baseTemplate({
+    color,
+    title,
+    body: `
+      ${paragraph(message)}
+      ${link ? ctaLink(`${FRONTEND_URL}${link}`, 'Voir dans l\'application', color) : ''}
+      ${divider()}
+      ${signOff()}
+    `,
+  });
+
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
+    from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: title,
+    html,
+  });
+
+  return { success: true, messageId: info.messageId };
+};
+
+const sendRecuEmail = async (toEmail, toName, recuNumber, pdfPath) => {
+  const color = '#0891b2';
+
+  const html = baseTemplate({
+    color,
+    title: `Reçu de cotisation — ${recuNumber}`,
+    body: `
+      ${greeting(toName)}
+      ${paragraph('Votre cotisation a été enregistrée avec succès.')}
+      ${paragraph(`Vous trouverez ci-joint votre reçu de paiement <strong>N° ${recuNumber}</strong>.`)}
+      ${divider()}
+      ${signOff()}
+    `,
+  });
+
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
+    from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: `Reçu de cotisation — ${recuNumber}`,
+    html,
+    attachments: [{ filename: `${recuNumber}.pdf`, path: pdfPath }],
+  });
+
+  console.log('Reçu envoyé par email:', info.messageId);
+  return { success: true, messageId: info.messageId };
 };
 
 module.exports = {
@@ -336,5 +237,5 @@ module.exports = {
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendNotificationEmail,
-  sendRecuEmail
+  sendRecuEmail,
 };
