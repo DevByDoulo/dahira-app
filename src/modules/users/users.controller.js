@@ -33,9 +33,10 @@ const updateUserController = async (req, res, next) => {
     }
 
     const { id } = req.params;
-    const user = await updateUser(id, req.dahira_id, req.body);
+    const user = await updateUser(id, req.dahira_id, req.body, req.user);
     return success(res, user, 200);
   } catch (err) {
+    if (err.message.startsWith('Action non autorisée')) return error(res, err.message, 403);
     next(err);
   }
 };
@@ -43,9 +44,10 @@ const updateUserController = async (req, res, next) => {
 const desactiverUserController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user = await desactiverUser(id, req.dahira_id);
+    const user = await desactiverUser(id, req.dahira_id, req.user);
     return success(res, user, 200);
   } catch (err) {
+    if (err.message.startsWith('Action non autorisée')) return error(res, err.message, 403);
     next(err);
   }
 };
@@ -63,9 +65,10 @@ const getUserByMembreIdController = async (req, res, next) => {
 const activerUserController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user = await activerUser(id, req.dahira_id);
+    const user = await activerUser(id, req.dahira_id, req.user);
     return success(res, user, 200);
   } catch (err) {
+    if (err.message.startsWith('Action non autorisée')) return error(res, err.message, 403);
     next(err);
   }
 };

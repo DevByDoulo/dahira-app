@@ -83,7 +83,7 @@ const { ROLES } = require('../../constants/roles');
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), createSeanceValidation, createSeanceController);
+router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), createSeanceValidation, createSeanceController);
 
 /**
  * @swagger
@@ -192,7 +192,7 @@ router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES
  *       404:
  *         description: Aucune séance hebdomadaire en cours
  */
-router.get('/courante', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getSeanceCouranteController);
+router.get('/courante', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG), getSeanceCouranteController);
 
 /**
  * @swagger
@@ -250,10 +250,10 @@ router.get('/courante', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREA
  *       404:
  *         description: Séance non trouvée
  */
-router.patch('/:id/cloturer', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), cloturerSeanceController);
+router.patch('/:id/cloturer', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), cloturerSeanceController);
 
-router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getSeanceByIdController);
+router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG), getSeanceByIdController);
 
-router.patch('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), updateSeanceValidation, updateSeanceController);
+router.patch('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), updateSeanceValidation, updateSeanceController);
 
 module.exports = router;

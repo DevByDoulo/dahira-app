@@ -4,8 +4,10 @@ const {
   loginController,
   getMeController,
   changePasswordController,
+  registerDahiraController,
   loginValidation,
-  changePasswordValidation
+  changePasswordValidation,
+  registerDahiraValidation,
 } = require('./auth.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 
@@ -88,6 +90,7 @@ const authMiddleware = require('../../middlewares/auth.middleware');
  *         description: Compte désactivé
  */
 router.post('/login', loginValidation, loginController);
+router.post('/register', registerDahiraValidation, registerDahiraController);
 
 /**
  * @swagger
@@ -195,6 +198,6 @@ router.get('/me', authMiddleware, getMeController);
  *       401:
  *         description: Token manquant ou invalide
  */
-router.put('/change-password', authMiddleware, changePasswordValidation, changePasswordController);
+router.patch('/change-password', authMiddleware, changePasswordValidation, changePasswordController);
 
 module.exports = router;

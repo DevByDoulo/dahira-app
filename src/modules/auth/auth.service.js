@@ -76,8 +76,63 @@ const changePassword = async (userId, oldPassword, newPassword) => {
   return { message: 'Mot de passe modifié avec succès' };
 };
 
+const registerDahira = async ({ dahira, user }) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // 1. Vérifier que le téléphone n'est pas déjà utilisé
+    const [[existing]] = await conn.query(
+      'SELECT id FROM users WHERE telephone = ?',
+      [user.telephone]
+    );
+    if (existing) throw new Error('Ce numéro de téléphone est déjà utilisé');
+
+    // 2. Créer le Dahira
+    const [dahiraResult] = await conn.query(
+      'INSERT INTO dahiras (nom, ville, telephone, actif) VALUES (?, ?, ?, TRUE)',
+      [dahira.nom.trim(), dahira.ville?.trim() || null, dahira.telephone?.trim() || null]
+    );
+    const dahiraId = dahiraResult.insertId;
+
+    // 3. Créer l'utilisateur propriétaire avec rôle bureau
+    const password_hash = await hashPassword(user.password);
+    const [userResult] = await conn.query(
+      `INSERT INTO users (dahira_id, nom, telephone, email, password_hash, role, is_owner, actif)
+       VALUES (?, ?, ?, ?, ?, 'bureau', TRUE, TRUE)`,
+      [dahiraId, user.nom.trim(), user.telephone.trim(), user.email?.trim() || null, password_hash]
+    );
+    const userId = userResult.insertId;
+
+    await conn.commit();
+
+    // 4. Générer le token et retourner
+    const token = generateToken({ id: userId, dahira_id: dahiraId, role: 'bureau', membre_id: null });
+
+    return {
+      token,
+      user: {
+        id: userId,
+        dahira_id: dahiraId,
+        nom: user.nom.trim(),
+        telephone: user.telephone.trim(),
+        email: user.email?.trim() || null,
+        role: 'bureau',
+        is_owner: true,
+        actif: true,
+      },
+    };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+};
+
 module.exports = {
   login,
   getMe,
-  changePassword
+  changePassword,
+  registerDahira,
 };

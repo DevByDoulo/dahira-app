@@ -52,7 +52,7 @@ router.use(tenantMiddleware);
  *       401:
  *         description: Non authentifié
  */
-router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), presenceValidation, enregistrerPresenceController);
+router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), presenceValidation, enregistrerPresenceController);
 
 /**
  * @swagger
@@ -85,7 +85,7 @@ router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), presenceValidati
  *       400:
  *         description: Erreur de validation
  */
-router.post('/batch', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), presencesBatchValidation, enregistrerPresencesBatchController);
+router.post('/batch', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), presencesBatchValidation, enregistrerPresencesBatchController);
 
 /**
  * @swagger
@@ -185,7 +185,7 @@ router.get('/stats', getStatistiquesGlobalesController);
  *       400:
  *         description: Erreur de validation
  */
-router.post('/absence', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), presenceValidation, marquerAbsenceController);
+router.post('/absence', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), presenceValidation, marquerAbsenceController);
 
 /**
  * @swagger
@@ -210,7 +210,7 @@ router.post('/absence', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), presenceV
  *       403:
  *         description: Accès refusé
  */
-router.delete('/:id', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), supprimerPresenceController);
+router.delete('/:id', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), supprimerPresenceController);
 
 /**
  * @swagger

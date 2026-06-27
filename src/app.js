@@ -84,6 +84,9 @@ app.use('/api/auth', require('./modules/auth/auth.routes'));
 app.use('/api/invitations', require('./modules/invitations/invitations.routes'));
 app.use('/api/password-reset', require('./modules/password-reset/password-reset.routes'));
 
+// Routes administration plateforme (super_admin uniquement, sans tenant middleware)
+app.use('/api/admin', require('./modules/admin/admin.routes'));
+
 // Routes dahiras (pas de tenant middleware car gestion multi-dahira)
 app.use('/api/dahiras', require('./modules/dahiras/dahiras.routes'));
 

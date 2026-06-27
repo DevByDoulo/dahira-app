@@ -12,8 +12,10 @@
 // ============================================
 
 const ROLES = {
+  SUPER_ADMIN: 'super_admin',
   BUREAU: 'bureau',
   TRESORIER: 'tresorier',
+  RESPONSABLE_ORG: 'responsable_org',
   MEMBRE: 'membre'
 };
 
@@ -22,26 +24,35 @@ const ROLES = {
 // ============================================
 
 const ROLE_LABELS = {
+  [ROLES.SUPER_ADMIN]: {
+    fr: 'Super Administrateur',
+    en: 'Super Admin',
+    level: 99,
+    description: 'Contrôle total de la plateforme SaaS — tous les dahiras'
+  },
   [ROLES.BUREAU]: {
-    fr: 'Bureau',
-    en: 'Board',
-    icon: '🏛️',
-    level: 3,
-    description: 'Membres du bureau exécutif - Accès complet'
+    fr: 'Administrateur Général',
+    en: 'Admin',
+    level: 4,
+    description: 'Accès complet — configuration et gestion globale'
   },
   [ROLES.TRESORIER]: {
     fr: 'Trésorier',
     en: 'Treasurer',
-    icon: '💰',
+    level: 3,
+    description: 'Gestion financière — cotisations, dépenses, rapports'
+  },
+  [ROLES.RESPONSABLE_ORG]: {
+    fr: 'Responsable Organisation',
+    en: 'Organisation Manager',
     level: 2,
-    description: 'Responsable financier - Gestion des finances'
+    description: 'Gestion des événements, séances, présences et annonces'
   },
   [ROLES.MEMBRE]: {
     fr: 'Membre',
     en: 'Member',
-    icon: '👤',
     level: 1,
-    description: 'Membre ordinaire - Consultation uniquement'
+    description: 'Accès en lecture — profil, cotisations propres, calendrier'
   }
 };
 
@@ -50,9 +61,10 @@ const ROLE_LABELS = {
 // ============================================
 
 const ROLE_HIERARCHY = [
-  ROLES.MEMBRE,      // Niveau 1 - Moins de permissions
-  ROLES.TRESORIER,   // Niveau 2 - Permissions intermédiaires
-  ROLES.BUREAU       // Niveau 3 - Toutes les permissions
+  ROLES.MEMBRE,           // Niveau 1
+  ROLES.RESPONSABLE_ORG,  // Niveau 2
+  ROLES.TRESORIER,        // Niveau 3
+  ROLES.BUREAU            // Niveau 4 - Toutes les permissions
 ];
 
 // ============================================

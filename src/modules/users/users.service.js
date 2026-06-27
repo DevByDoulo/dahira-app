@@ -1,6 +1,26 @@
 const pool = require('../../config/db');
 const { hashPassword } = require('../../utils/bcrypt');
 
+/**
+ * Vérifie qu'un bureau ne peut pas agir sur un bureau plus ancien (id inférieur = rang supérieur).
+ * Seul le super_admin contourne cette règle (il passe par /api/admin, pas ici).
+ */
+const assertCanActOnUser = async (actingUser, targetId, dahiraId) => {
+  if (actingUser.role !== 'bureau') return;
+
+  const [[target]] = await pool.query(
+    'SELECT id, role, is_owner FROM users WHERE id = ? AND dahira_id = ?',
+    [targetId, dahiraId]
+  );
+  if (!target) throw new Error('Utilisateur non trouvé');
+
+  if (target.role === 'bureau' && (target.is_owner || target.id < actingUser.id)) {
+    throw new Error(
+      'Action non autorisée : vous ne pouvez pas modifier ou désactiver un administrateur de rang supérieur.'
+    );
+  }
+};
+
 const getAllUsers = async (dahiraId) => {
   const [users] = await pool.query(
     `SELECT id, nom, telephone, email, role, actif, membre_id, created_at 
@@ -53,7 +73,8 @@ const createUser = async (dahiraId, userData) => {
   return newUser[0];
 };
 
-const updateUser = async (id, dahiraId, userData) => {
+const updateUser = async (id, dahiraId, userData, actingUser) => {
+  await assertCanActOnUser(actingUser, id, dahiraId);
   const { nom, email, role, membre_id } = userData;
 
   // Validate role if provided
@@ -103,8 +124,9 @@ const updateUser = async (id, dahiraId, userData) => {
   return updatedUser[0];
 };
 
-const desactiverUser = async (id, dahiraId) => {
-  // Check if user exists and belongs to dahira
+const desactiverUser = async (id, dahiraId, actingUser) => {
+  await assertCanActOnUser(actingUser, id, dahiraId);
+
   const [existing] = await pool.query(
     'SELECT id FROM users WHERE id = ? AND dahira_id = ?',
     [id, dahiraId]
@@ -136,7 +158,9 @@ const getUserByMembreId = async (membreId, dahiraId) => {
   return rows[0] ?? null;
 };
 
-const activerUser = async (id, dahiraId) => {
+const activerUser = async (id, dahiraId, actingUser) => {
+  await assertCanActOnUser(actingUser, id, dahiraId);
+
   const [existing] = await pool.query(
     'SELECT id FROM users WHERE id = ? AND dahira_id = ?',
     [id, dahiraId]
@@ -153,15 +177,16 @@ const activerUser = async (id, dahiraId) => {
 };
 
 const updateMe = async (userId, dahiraId, { nom, email, telephone }) => {
-  const [existing] = await pool.query(
-    'SELECT id FROM users WHERE id = ? AND dahira_id = ?',
-    [userId, dahiraId]
-  );
+  // Le super_admin n'a pas de dahira_id — on filtre uniquement par id
+  const whereClause = dahiraId ? 'WHERE id = ? AND dahira_id = ?' : 'WHERE id = ?';
+  const whereParams = dahiraId ? [userId, dahiraId] : [userId];
+
+  const [existing] = await pool.query(`SELECT id FROM users ${whereClause}`, whereParams);
   if (existing.length === 0) throw new Error('Utilisateur non trouvé');
 
   await pool.query(
-    'UPDATE users SET nom = ?, email = ?, telephone = ? WHERE id = ? AND dahira_id = ?',
-    [nom, email || null, telephone || null, userId, dahiraId]
+    'UPDATE users SET nom = ?, email = ?, telephone = ? WHERE id = ?',
+    [nom, email || null, telephone || null, userId]
   );
 
   const [updated] = await pool.query(

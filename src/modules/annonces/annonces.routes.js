@@ -87,9 +87,9 @@ const upload = multer({
  *       401:
  *         description: Non authentifié
  */
-router.post('/upload-image', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), upload.single('image'), uploadAnnonceImageController);
+router.post('/upload-image', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), upload.single('image'), uploadAnnonceImageController);
 
-router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), getAllAnnoncesController);
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG, ROLES.BUREAU), getAllAnnoncesController);
 
 /**
  * @swagger
@@ -158,7 +158,7 @@ router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES
  *       404:
  *         description: Annonce non trouvée
  */
-router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), getAnnonceByIdController);
+router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG, ROLES.BUREAU), getAnnonceByIdController);
 
 /**
  * @swagger
@@ -244,7 +244,7 @@ router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, RO
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), createAnnonceValidation, createAnnonceController);
+router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), createAnnonceValidation, createAnnonceController);
 
 /**
  * @swagger
@@ -339,7 +339,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), cre
  *       404:
  *         description: Annonce non trouvée
  */
-router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), updateAnnonceValidation, updateAnnonceController);
+router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), updateAnnonceValidation, updateAnnonceController);
 
 /**
  * @swagger
@@ -381,7 +381,7 @@ router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), u
  *       404:
  *         description: Annonce non trouvée
  */
-router.delete('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), deleteAnnonceController);
+router.delete('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), deleteAnnonceController);
 
 /**
  * @swagger
@@ -452,6 +452,6 @@ router.delete('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU)
  *       404:
  *         description: Annonce non trouvée
  */
-router.patch('/:id/epingler', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), toggleEpingleeController);
+router.patch('/:id/epingler', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), toggleEpingleeController);
 
 module.exports = router;
