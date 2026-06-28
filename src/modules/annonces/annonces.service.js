@@ -21,14 +21,38 @@ const uploadAnnonceImage = async (file, baseUrl) => {
   return { url: `${baseUrl}/uploads/annonces/${filename}` };
 };
 
-const getAllAnnonces = async (dahiraId, userRole) => {
-  const query = `SELECT a.*, m.nom as publie_par_nom
-               FROM annonces a
-               LEFT JOIN membres m ON a.publie_par = m.id
-               WHERE a.dahira_id = ?
-               ORDER BY a.created_at DESC`;
+const uploadAnnonceAudio = async (file, baseUrl) => {
+  const uploadDir = path.join(UPLOADS_BASE, 'annonces', 'audio');
+  await fs.mkdir(uploadDir, { recursive: true });
 
-  const [annonces] = await pool.query(query, [dahiraId]);
+  const ext = (file.originalname.split('.').pop() || 'webm').toLowerCase();
+  const filename = `vocal-${Date.now()}.${ext}`;
+  const filePath = path.join(uploadDir, filename);
+
+  await fs.writeFile(filePath, file.buffer);
+
+  return { url: `${baseUrl}/uploads/annonces/audio/${filename}` };
+};
+
+const deleteAudioFile = async (audioUrl) => {
+  if (!audioUrl) return;
+  try {
+    const filename = path.basename(audioUrl);
+    await fs.unlink(path.join(UPLOADS_BASE, 'annonces', 'audio', filename));
+  } catch {
+    // fichier déjà supprimé ou inexistant, pas critique
+  }
+};
+
+const getAllAnnonces = async (dahiraId, userRole) => {
+  const [annonces] = await pool.query(
+    `SELECT a.*, m.nom as publie_par_nom
+     FROM annonces a
+     LEFT JOIN membres m ON a.publie_par = m.id
+     WHERE a.dahira_id = ?
+     ORDER BY a.created_at DESC`,
+    [dahiraId]
+  );
   return annonces;
 };
 
@@ -41,20 +65,18 @@ const getAnnonceById = async (id, dahiraId) => {
     [id, dahiraId]
   );
 
-  if (annonces.length === 0) {
-    throw new Error('Annonce non trouvée');
-  }
+  if (annonces.length === 0) throw new Error('Annonce non trouvée');
 
   return annonces[0];
 };
 
 const createAnnonce = async (dahiraId, annonceData, userId) => {
-  const { titre, contenu, image_url, cible_groupe } = annonceData;
+  const { titre, contenu, image_url, audio_url, cible_groupe } = annonceData;
 
   const [result] = await pool.query(
-    `INSERT INTO annonces (dahira_id, titre, contenu, image_url, cible_groupe, publie_par, epinglee)
-     VALUES (?, ?, ?, ?, ?, ?, FALSE)`,
-    [dahiraId, titre, contenu, image_url, cible_groupe, userId]
+    `INSERT INTO annonces (dahira_id, titre, contenu, image_url, audio_url, cible_groupe, publie_par, epinglee)
+     VALUES (?, ?, ?, ?, ?, ?, ?, FALSE)`,
+    [dahiraId, titre, contenu, image_url ?? null, audio_url ?? null, cible_groupe ?? null, userId]
   );
 
   const [newAnnonce] = await pool.query(
@@ -69,26 +91,31 @@ const createAnnonce = async (dahiraId, annonceData, userId) => {
 };
 
 const updateAnnonce = async (id, dahiraId, annonceData) => {
-  const { titre, contenu, image_url, cible_groupe } = annonceData;
+  const { titre, contenu, image_url, audio_url, cible_groupe } = annonceData;
 
-  // Check if annonce exists and belongs to dahira
   const [existing] = await pool.query(
-    'SELECT id FROM annonces WHERE id = ? AND dahira_id = ?',
+    'SELECT id, audio_url FROM annonces WHERE id = ? AND dahira_id = ?',
     [id, dahiraId]
   );
 
-  if (existing.length === 0) {
-    throw new Error('Annonce non trouvée');
+  if (existing.length === 0) throw new Error('Annonce non trouvée');
+
+  // Nettoyer l'ancien fichier audio si remplacé ou supprimé
+  const oldAudioUrl = existing[0].audio_url;
+  if (oldAudioUrl && audio_url !== undefined && oldAudioUrl !== audio_url) {
+    await deleteAudioFile(oldAudioUrl);
   }
+
+  const newAudioUrl = audio_url !== undefined ? audio_url : oldAudioUrl;
 
   await pool.query(
     `UPDATE annonces
-     SET titre = ?, contenu = ?, image_url = ?, cible_groupe = ?
+     SET titre = ?, contenu = ?, image_url = ?, audio_url = ?, cible_groupe = ?
      WHERE id = ? AND dahira_id = ?`,
-    [titre, contenu, image_url, cible_groupe, id, dahiraId]
+    [titre, contenu, image_url ?? null, newAudioUrl ?? null, cible_groupe ?? null, id, dahiraId]
   );
 
-  const [updatedAnnonce] = await pool.query(
+  const [updated] = await pool.query(
     `SELECT a.*, m.nom as publie_par_nom
      FROM annonces a
      LEFT JOIN membres m ON a.publie_par = m.id
@@ -96,19 +123,18 @@ const updateAnnonce = async (id, dahiraId, annonceData) => {
     [id]
   );
 
-  return updatedAnnonce[0];
+  return updated[0];
 };
 
 const deleteAnnonce = async (id, dahiraId) => {
-  // Check if annonce exists and belongs to dahira
   const [existing] = await pool.query(
-    'SELECT id FROM annonces WHERE id = ? AND dahira_id = ?',
+    'SELECT id, audio_url FROM annonces WHERE id = ? AND dahira_id = ?',
     [id, dahiraId]
   );
 
-  if (existing.length === 0) {
-    throw new Error('Annonce non trouvée');
-  }
+  if (existing.length === 0) throw new Error('Annonce non trouvée');
+
+  await deleteAudioFile(existing[0].audio_url);
 
   await pool.query(
     'DELETE FROM annonces WHERE id = ? AND dahira_id = ?',
@@ -119,15 +145,12 @@ const deleteAnnonce = async (id, dahiraId) => {
 };
 
 const toggleEpinglee = async (id, dahiraId) => {
-  // Check if annonce exists and belongs to dahira
   const [existing] = await pool.query(
     'SELECT id, epinglee FROM annonces WHERE id = ? AND dahira_id = ?',
     [id, dahiraId]
   );
 
-  if (existing.length === 0) {
-    throw new Error('Annonce non trouvée');
-  }
+  if (existing.length === 0) throw new Error('Annonce non trouvée');
 
   const newEpinglee = !existing[0].epinglee;
 
@@ -136,7 +159,7 @@ const toggleEpinglee = async (id, dahiraId) => {
     [newEpinglee, id, dahiraId]
   );
 
-  const [updatedAnnonce] = await pool.query(
+  const [updated] = await pool.query(
     `SELECT a.*, m.nom as publie_par_nom
      FROM annonces a
      LEFT JOIN membres m ON a.publie_par = m.id
@@ -144,7 +167,7 @@ const toggleEpinglee = async (id, dahiraId) => {
     [id]
   );
 
-  return updatedAnnonce[0];
+  return updated[0];
 };
 
 module.exports = {
@@ -154,5 +177,6 @@ module.exports = {
   updateAnnonce,
   deleteAnnonce,
   toggleEpinglee,
-  uploadAnnonceImage
+  uploadAnnonceImage,
+  uploadAnnonceAudio
 };

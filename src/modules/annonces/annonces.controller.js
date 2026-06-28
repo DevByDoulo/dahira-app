@@ -5,7 +5,8 @@ const {
   updateAnnonce,
   deleteAnnonce,
   toggleEpinglee,
-  uploadAnnonceImage
+  uploadAnnonceImage,
+  uploadAnnonceAudio
 } = require('./annonces.service');
 const { success, error } = require('../../utils/response');
 const { body, validationResult } = require('express-validator');
@@ -82,6 +83,7 @@ const createAnnonceValidation = [
   body('titre').notEmpty().withMessage('Le titre est requis'),
   body('contenu').notEmpty().withMessage('Le contenu est requis'),
   body('image_url').optional(),
+  body('audio_url').optional(),
   body('cible_groupe').optional()
 ];
 
@@ -89,6 +91,7 @@ const updateAnnonceValidation = [
   body('titre').notEmpty().withMessage('Le titre est requis'),
   body('contenu').notEmpty().withMessage('Le contenu est requis'),
   body('image_url').optional(),
+  body('audio_url').optional(),
   body('cible_groupe').optional()
 ];
 
@@ -103,6 +106,17 @@ const uploadAnnonceImageController = async (req, res, next) => {
   }
 };
 
+const uploadAnnonceAudioController = async (req, res, next) => {
+  try {
+    if (!req.file) return error(res, 'Aucun fichier audio reçu', 400);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const result = await uploadAnnonceAudio(req.file, baseUrl);
+    return success(res, result, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getAllAnnoncesController,
   getAnnonceByIdController,
@@ -111,6 +125,7 @@ module.exports = {
   deleteAnnonceController,
   toggleEpingleeController,
   uploadAnnonceImageController,
+  uploadAnnonceAudioController,
   createAnnonceValidation,
   updateAnnonceValidation
 };

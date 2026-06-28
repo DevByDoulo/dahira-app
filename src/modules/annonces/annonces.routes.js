@@ -9,6 +9,7 @@ const {
   deleteAnnonceController,
   toggleEpingleeController,
   uploadAnnonceImageController,
+  uploadAnnonceAudioController,
   createAnnonceValidation,
   updateAnnonceValidation
 } = require('./annonces.controller');
@@ -24,6 +25,17 @@ const upload = multer({
     const allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Format non autorisé. Utilisez JPG, PNG, WebP ou GIF.'));
+  }
+});
+
+const uploadAudio = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/mpeg', 'audio/wav', 'audio/x-m4a'];
+    const mimeBase = file.mimetype.split(';')[0].trim();
+    if (allowed.includes(mimeBase)) cb(null, true);
+    else cb(new Error('Format audio non autorisé.'));
   }
 });
 
@@ -88,6 +100,8 @@ const upload = multer({
  *         description: Non authentifié
  */
 router.post('/upload-image', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), upload.single('image'), uploadAnnonceImageController);
+
+router.post('/upload-audio', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), uploadAudio.single('audio'), uploadAnnonceAudioController);
 
 router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG, ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), getAllAnnoncesController);
 
