@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const {
   genererRecuController,
@@ -63,7 +63,7 @@ router.get('/', getRecusDahiraController);
  *       404:
  *         description: Cotisation introuvable ou non approuvée
  */
-router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), creerRecuController);
+router.post('/', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), creerRecuController);
 
 /**
  * @swagger
@@ -116,7 +116,7 @@ router.get('/:id/download', downloadRecuController);
  *       404:
  *         description: Cotisation non trouvée
  */
-router.post('/cotisation/:cotisation_id/generer', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), genererRecuController);
+router.post('/cotisation/:cotisation_id/generer', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), genererRecuController);
 
 /**
  * @swagger
@@ -141,7 +141,7 @@ router.post('/cotisation/:cotisation_id/generer', roleMiddleware(ROLES.BUREAU, R
  *       401:
  *         description: Non authentifié
  */
-router.post('/cotisation/:cotisation_id/envoyer', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), envoyerRecuController);
+router.post('/cotisation/:cotisation_id/envoyer', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), envoyerRecuController);
 
 /**
  * @swagger
@@ -191,6 +191,7 @@ router.get('/cotisation/:cotisation_id', getRecuByCotisationController);
  */
 router.get('/membre/:membre_id', getRecusMembreController);
 
-router.get('/seance/:seance_id', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getRecusSeanceController);
+router.get('/seance/:seance_id', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getRecusSeanceController);
 
 module.exports = router;
+

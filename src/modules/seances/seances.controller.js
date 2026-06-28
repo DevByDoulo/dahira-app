@@ -1,6 +1,10 @@
-const { createSeance, getAllSeances, getSeanceCourante, getSeanceById, updateSeance, cloturerSeance } = require('./seances.service');
+const { createSeance, getAllSeances, getSeanceCourante, getSeanceById, updateSeance, updateSeancePhoto, cloturerSeance } = require('./seances.service');
 const { success, error } = require('../../utils/response');
 const { body, validationResult, query } = require('express-validator');
+const upload = require('../../middlewares/upload.middleware');
+const sharp = require('sharp');
+const path = require('path');
+const fs = require('fs');
 
 const createSeanceController = async (req, res, next) => {
   try {
@@ -69,6 +73,33 @@ const updateSeanceController = async (req, res, next) => {
   }
 };
 
+const uploadSeancePhotoController = [
+  upload.single('photo'),
+  async (req, res, next) => {
+    try {
+      if (!req.file) return error(res, 'Aucun fichier fourni', 400);
+
+      const uploadsDir = path.join(process.cwd(), 'uploads', 'seances');
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+      const { id } = req.params;
+      const filename = `seance_${id}_${Date.now()}`;
+      const photoPath = path.join(uploadsDir, `${filename}.webp`);
+
+      await sharp(req.file.buffer)
+        .resize(1200, 800, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 85 })
+        .toFile(photoPath);
+
+      const photoUrl = `/uploads/seances/${filename}.webp`;
+      const seance = await updateSeancePhoto(id, req.dahira_id, photoUrl);
+      return success(res, seance, 200);
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
 const createSeanceValidation = [
   body('date_seance').notEmpty().withMessage('La date de séance est requise'),
   body('type')
@@ -97,6 +128,7 @@ module.exports = {
   getSeanceCouranteController,
   getSeanceByIdController,
   updateSeanceController,
+  uploadSeancePhotoController,
   cloturerSeanceController,
   createSeanceValidation,
   getAllSeancesValidation,

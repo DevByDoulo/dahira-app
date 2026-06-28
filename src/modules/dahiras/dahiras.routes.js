@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const {
   createDahiraController,
@@ -158,7 +158,7 @@ router.get('/:id', getDahiraByIdController);
  *       404:
  *         description: Dahira non trouvé
  */
-router.put('/:id', authMiddleware, roleMiddleware(ROLES.BUREAU), updateDahiraValidation, updateDahiraController);
+router.put('/:id', authMiddleware, roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), updateDahiraValidation, updateDahiraController);
 
 /**
  * @swagger
@@ -183,7 +183,7 @@ router.put('/:id', authMiddleware, roleMiddleware(ROLES.BUREAU), updateDahiraVal
  *       404:
  *         description: Dahira non trouvé
  */
-router.patch('/:id/desactiver', authMiddleware, roleMiddleware(ROLES.BUREAU), desactiverDahiraController);
+router.patch('/:id/desactiver', authMiddleware, roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), desactiverDahiraController);
 
 /**
  * @swagger
@@ -208,7 +208,7 @@ router.patch('/:id/desactiver', authMiddleware, roleMiddleware(ROLES.BUREAU), de
  *       404:
  *         description: Dahira non trouvé
  */
-router.patch('/:id/activer', authMiddleware, roleMiddleware(ROLES.BUREAU), activerDahiraController);
+router.patch('/:id/activer', authMiddleware, roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), activerDahiraController);
 
 /**
  * @swagger
@@ -235,6 +235,7 @@ router.patch('/:id/activer', authMiddleware, roleMiddleware(ROLES.BUREAU), activ
  *       404:
  *         description: Dahira non trouvé
  */
-router.delete('/:id', authMiddleware, roleMiddleware(ROLES.BUREAU), deleteDahiraController);
+router.delete('/:id', authMiddleware, roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), deleteDahiraController);
 
 module.exports = router;
+

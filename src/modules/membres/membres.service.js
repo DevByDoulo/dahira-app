@@ -2,43 +2,62 @@ const pool = require('../../config/db');
 const { hashPassword } = require('../../utils/bcrypt');
 
 // ── Garde de sécurité hiérarchique ───────────────────────────────────────────
-// Un bureau ne peut pas agir sur un bureau de rang supérieur (is_owner OU id plus petit).
 const assertCanActOnMembre = async (actingMembre, targetId, dahiraId) => {
-  if (actingMembre.role !== 'bureau') return;
+  const { role: actingRole } = actingMembre;
+  if (actingRole !== 'secretaire_general' && actingRole !== 'adjoint') return;
+
   const [[target]] = await pool.query(
     'SELECT id, role, is_owner FROM membres WHERE id = ? AND dahira_id = ?',
     [targetId, dahiraId],
   );
   if (!target) throw new Error('Membre non trouvé');
-  if (target.role === 'bureau' && (target.is_owner || target.id < actingMembre.id)) {
+
+  // L'adjoint ne peut pas agir sur un Secrétaire Général
+  if (actingRole === 'adjoint' && target.role === 'secretaire_general') {
     throw new Error(
-      'Action non autorisée : vous ne pouvez pas modifier ou désactiver un administrateur de rang supérieur.',
+      "Action non autorisée : un adjoint ne peut pas modifier ou désactiver un Secrétaire Général.",
+    );
+  }
+
+  // Le SG ne peut pas agir sur le SG fondateur (is_owner) ni un SG de rang supérieur
+  if (
+    actingRole === 'secretaire_general' &&
+    target.role === 'secretaire_general' &&
+    (target.is_owner || target.id < actingMembre.id)
+  ) {
+    throw new Error(
+      "Action non autorisée : vous ne pouvez pas modifier ou désactiver un Secrétaire Général de rang supérieur.",
     );
   }
 };
 
 // ── Listing ───────────────────────────────────────────────────────────────────
 const getAllMembres = async (dahiraId) => {
-  const [membres] = await pool.query(
-    `SELECT id, nom, prenom, telephone, telephone_secours, photo_url, thumbnail_url,
-            date_adhesion, responsabilites, role, is_owner, actif,
-            (password_hash IS NOT NULL) AS a_compte, created_at
-     FROM membres
-     WHERE dahira_id = ?
-     ORDER BY nom, prenom`,
+  const [rows] = await pool.query(
+    `SELECT m.id, m.nom, m.prenom, m.telephone, m.telephone_secours, m.photo_url, m.thumbnail_url,
+            m.date_adhesion, m.responsabilites, m.role, m.is_owner, m.actif,
+            (m.password_hash IS NOT NULL) AS a_compte, m.created_at,
+            COALESCE(SUM(CASE WHEN c.statut = 'approved' THEN c.montant ELSE 0 END), 0) AS total_cotise,
+            COALESCE(SUM(CASE WHEN c.statut = 'approved'
+              AND DATE_FORMAT(c.created_at, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')
+              THEN c.montant ELSE 0 END), 0) AS cotise_ce_mois,
+            COUNT(CASE WHEN DATE_FORMAT(c.created_at, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')
+              THEN 1 END) AS nb_cot_ce_mois
+     FROM membres m
+     LEFT JOIN cotisations c ON c.membre_id = m.id AND c.dahira_id = m.dahira_id
+     WHERE m.dahira_id = ?
+     GROUP BY m.id
+     ORDER BY m.nom, m.prenom`,
     [dahiraId],
   );
 
-  return Promise.all(
-    membres.map(async (m) => {
-      const [cots] = await pool.query(
-        `SELECT id FROM cotisations WHERE membre_id = ?
-         AND YEAR(created_at) = YEAR(NOW()) AND MONTH(created_at) = MONTH(NOW()) LIMIT 1`,
-        [m.id],
-      );
-      return { ...m, a_compte: !!m.a_compte, statut_cotisation: cots.length > 0 ? 'a_jour' : 'en_retard' };
-    }),
-  );
+  return rows.map((m) => ({
+    ...m,
+    a_compte: !!m.a_compte,
+    total_cotise: Number(m.total_cotise),
+    cotise_ce_mois: Number(m.cotise_ce_mois),
+    statut_cotisation: m.nb_cot_ce_mois > 0 ? 'a_jour' : 'en_retard',
+  }));
 };
 
 const getMembresAvecCompte = async (dahiraId) => {
@@ -185,7 +204,7 @@ const updateMembre = async (id, dahiraId, membreData, actingMembre) => {
 const updateRole = async (id, dahiraId, role, actingMembre) => {
   await assertCanActOnMembre(actingMembre, id, dahiraId);
 
-  const allowed = ['bureau', 'tresorier', 'responsable_org', 'membre'];
+  const allowed = ['secretaire_general', 'adjoint', 'tresorier', 'responsable_org', 'membre'];
   if (!allowed.includes(role)) throw new Error('Rôle invalide');
 
   const [existing] = await pool.query(

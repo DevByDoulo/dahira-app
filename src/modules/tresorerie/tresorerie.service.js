@@ -295,10 +295,48 @@
     return alertes;
   };
 
+  const getRapportMensuel = async (dahiraId, mois) => {
+    const [[dahira]] = await pool.query('SELECT nom FROM dahiras WHERE id = ?', [dahiraId]);
+
+    const [cotisations] = await pool.query(
+      `SELECT m.nom, m.prenom, s.date_seance, c.montant, c.mode_paiement
+       FROM cotisations c
+       JOIN membres m ON c.membre_id = m.id
+       JOIN seances s  ON c.seance_id  = s.id
+       WHERE c.dahira_id = ? AND c.statut = 'approved'
+         AND DATE_FORMAT(c.created_at, '%Y-%m') = ?
+       ORDER BY c.created_at ASC`,
+      [dahiraId, mois]
+    );
+
+    const [depenses] = await pool.query(
+      `SELECT d.description, d.categorie, d.montant, d.date_depense
+       FROM depenses d
+       WHERE d.dahira_id = ? AND d.statut = 'validee'
+         AND DATE_FORMAT(d.date_depense, '%Y-%m') = ?
+       ORDER BY d.date_depense ASC`,
+      [dahiraId, mois]
+    );
+
+    const totalCotisations = cotisations.reduce((s, c) => s + Number(c.montant), 0);
+    const totalDepenses    = depenses.reduce((s, d) => s + Number(d.montant), 0);
+
+    return {
+      dahiraNom: dahira?.nom ?? 'Dahira',
+      mois,
+      cotisations,
+      depenses,
+      totalCotisations,
+      totalDepenses,
+      soldeNet: totalCotisations - totalDepenses
+    };
+  };
+
   module.exports = {
     getSolde,
     getTransactions,
     getEvolution,
     getPrevisions,
-    getAlertes
+    getAlertes,
+    getRapportMensuel
   };

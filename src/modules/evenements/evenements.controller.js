@@ -39,7 +39,7 @@ const createEvenementController = async (req, res, next) => {
       return error(res, errors.array()[0].msg, 400);
     }
 
-    let photo_url = null;
+    let image_url = null;
     if (req.file) {
       const uploadDir = path.join(UPLOADS_BASE, 'photos', 'evenements');
       await fs.mkdir(uploadDir, { recursive: true });
@@ -49,10 +49,10 @@ const createEvenementController = async (req, res, next) => {
         .resize(1200, 630, { fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality: 85 })
         .toFile(photoPath);
-      photo_url = `/uploads/photos/evenements/${filename}`;
+      image_url = `/uploads/photos/evenements/${filename}`;
     }
 
-    const evenement = await createEvenement(req.dahira_id, { ...req.body, photo_url }, req.user.id);
+    const evenement = await createEvenement(req.dahira_id, { ...req.body, image_url }, req.user.id);
     return success(res, evenement, 201);
   } catch (err) {
     next(err);

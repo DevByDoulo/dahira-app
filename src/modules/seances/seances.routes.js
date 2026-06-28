@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const {
   createSeanceController,
@@ -6,6 +6,7 @@ const {
   getSeanceCouranteController,
   getSeanceByIdController,
   updateSeanceController,
+  uploadSeancePhotoController,
   cloturerSeanceController,
   createSeanceValidation,
   getAllSeancesValidation,
@@ -83,7 +84,7 @@ const { ROLES } = require('../../constants/roles');
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), createSeanceValidation, createSeanceController);
+router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), createSeanceValidation, createSeanceController);
 
 /**
  * @swagger
@@ -141,7 +142,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLE
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER, ROLES.MEMBRE), getAllSeancesValidation, getAllSeancesController);
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER, ROLES.MEMBRE), getAllSeancesValidation, getAllSeancesController);
 
 /**
  * @swagger
@@ -192,7 +193,7 @@ router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES
  *       404:
  *         description: Aucune séance hebdomadaire en cours
  */
-router.get('/courante', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG), getSeanceCouranteController);
+router.get('/courante', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG), getSeanceCouranteController);
 
 /**
  * @swagger
@@ -250,10 +251,13 @@ router.get('/courante', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREA
  *       404:
  *         description: Séance non trouvée
  */
-router.patch('/:id/cloturer', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), cloturerSeanceController);
+router.patch('/:id/cloturer', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), cloturerSeanceController);
 
-router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG), getSeanceByIdController);
+router.get('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG), getSeanceByIdController);
 
-router.patch('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), updateSeanceValidation, updateSeanceController);
+router.post('/:id/photo', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), uploadSeancePhotoController);
+
+router.patch('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), updateSeanceValidation, updateSeanceController);
 
 module.exports = router;
+

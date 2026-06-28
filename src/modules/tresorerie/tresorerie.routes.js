@@ -1,11 +1,12 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const {
   getSoldeController,
   getTransactionsController,
   getEvolutionController,
   getPrevisionsController,
-  getAlertesController
+  getAlertesController,
+  getRapportMensuelController
 } = require('./tresorerie.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
@@ -33,7 +34,7 @@ router.use(tenantMiddleware);
  *       403:
  *         description: Accès refusé
  */
-router.get('/solde', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getSoldeController);
+router.get('/solde', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getSoldeController);
 
 /**
  * @swagger
@@ -87,7 +88,7 @@ router.get('/solde', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getSoldeCont
  *       401:
  *         description: Non authentifié
  */
-router.get('/transactions', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getTransactionsController);
+router.get('/transactions', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getTransactionsController);
 
 /**
  * @swagger
@@ -112,7 +113,7 @@ router.get('/transactions', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getTr
  *       401:
  *         description: Non authentifié
  */
-router.get('/evolution', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getEvolutionController);
+router.get('/evolution', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getEvolutionController);
 
 /**
  * @swagger
@@ -136,7 +137,7 @@ router.get('/evolution', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getEvolu
  *       401:
  *         description: Non authentifié
  */
-router.get('/previsions', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getPrevisionsController);
+router.get('/previsions', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getPrevisionsController);
 
 /**
  * @swagger
@@ -153,6 +154,9 @@ router.get('/previsions', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getPrev
  *       401:
  *         description: Non authentifié
  */
-router.get('/alertes', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getAlertesController);
+router.get('/alertes', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getAlertesController);
+
+router.get('/rapport-mensuel', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getRapportMensuelController);
 
 module.exports = router;
+

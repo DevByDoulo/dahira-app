@@ -1,12 +1,13 @@
-const pool = require('../../config/db');
+﻿const pool = require('../../config/db');
 const { hashPassword } = require('../../utils/bcrypt');
 
 /**
- * Vérifie qu'un bureau ne peut pas agir sur un bureau plus ancien (id inférieur = rang supérieur).
+ * Vérifie qu'un secretaire_general ne peut pas agir sur un secretaire_general plus ancien (id inférieur = rang supérieur).
  * Seul le super_admin contourne cette règle (il passe par /api/admin, pas ici).
  */
 const assertCanActOnUser = async (actingUser, targetId, dahiraId) => {
-  if (actingUser.role !== 'bureau') return;
+  const { role: actingRole } = actingUser;
+  if (actingRole !== 'secretaire_general' && actingRole !== 'adjoint') return;
 
   const [[target]] = await pool.query(
     'SELECT id, role, is_owner FROM users WHERE id = ? AND dahira_id = ?',
@@ -14,10 +15,16 @@ const assertCanActOnUser = async (actingUser, targetId, dahiraId) => {
   );
   if (!target) throw new Error('Utilisateur non trouvé');
 
-  if (target.role === 'bureau' && (target.is_owner || target.id < actingUser.id)) {
-    throw new Error(
-      'Action non autorisée : vous ne pouvez pas modifier ou désactiver un administrateur de rang supérieur.'
-    );
+  if (actingRole === 'adjoint' && target.role === 'secretaire_general') {
+    throw new Error("Action non autorisée : un adjoint ne peut pas modifier un Secrétaire Général.");
+  }
+
+  if (
+    actingRole === 'secretaire_general' &&
+    target.role === 'secretaire_general' &&
+    (target.is_owner || target.id < actingUser.id)
+  ) {
+    throw new Error('Action non autorisée : vous ne pouvez pas modifier un Secrétaire Général de rang supérieur.');
   }
 };
 
@@ -37,9 +44,9 @@ const createUser = async (dahiraId, userData) => {
   const { nom, telephone, password, role, email, membre_id } = userData;
 
   // Validate role
-  const validRoles = ['membre', 'tresorier', 'bureau'];
+  const validRoles = ['secretaire_general', 'adjoint', 'tresorier', 'responsable_org', 'membre'];
   if (!validRoles.includes(role)) {
-    throw new Error('Rôle invalide. Les rôles autorisés sont: membre, tresorier, bureau');
+    throw new Error('Rôle invalide. Les rôles autorisés sont : secretaire_general, adjoint, tresorier, responsable_org, membre');
   }
 
   // If membre_id is provided, verify it exists and belongs to the dahira
@@ -79,9 +86,9 @@ const updateUser = async (id, dahiraId, userData, actingUser) => {
 
   // Validate role if provided
   if (role) {
-    const validRoles = ['membre', 'tresorier', 'bureau'];
+    const validRoles = ['secretaire_general', 'adjoint', 'tresorier', 'responsable_org', 'membre'];
     if (!validRoles.includes(role)) {
-      throw new Error('Rôle invalide. Les rôles autorisés sont: membre, tresorier, bureau');
+      throw new Error('Rôle invalide. Les rôles autorisés sont : secretaire_general, adjoint, tresorier, responsable_org, membre');
     }
   }
 
@@ -231,3 +238,4 @@ module.exports = {
   updateMe,
   updateNotificationPrefs,
 };
+

@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const {
@@ -46,8 +46,8 @@ router.use(tenantMiddleware);
 
 // ── Galerie photos ──────────────────────────────────────────
 router.get('/', getPhotosController);
-router.post('/', allowRoles(ROLES.BUREAU), uploadMultiple.array('photos', 20), uploadGaleriePhotoController);
-router.delete('/:id([0-9]+)', allowRoles(ROLES.BUREAU), deleteGaleriePhotoController);
+router.post('/', allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), uploadMultiple.array('photos', 20), uploadGaleriePhotoController);
+router.delete('/:id([0-9]+)', allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), deleteGaleriePhotoController);
 // ────────────────────────────────────────────────────────────
 
 /**
@@ -85,7 +85,7 @@ router.post(
   '/membres/:id',
   authMiddleware,
   tenantMiddleware,
-  allowRoles(ROLES.BUREAU),
+  allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT),
   upload.single('photo'),
   uploadMembrePhotoController
 );
@@ -112,7 +112,7 @@ router.delete(
   '/membres/:id',
   authMiddleware,
   tenantMiddleware,
-  allowRoles(ROLES.BUREAU),
+  allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT),
   deleteMembrePhotoController
 );
 
@@ -155,3 +155,4 @@ router.post(
 );
 
 module.exports = router;
+

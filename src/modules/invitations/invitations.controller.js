@@ -19,6 +19,7 @@ const createInvitationController = async (req, res, next) => {
     const invitation = await createInvitation(req.dahira_id, req.body, req.user.id);
     return success(res, invitation, 201);
   } catch (err) {
+    if (err.code === 'ER_DUP_EMAIL') return error(res, err.message, 409);
     next(err);
   }
 };
@@ -92,7 +93,7 @@ const resendInvitationController = async (req, res, next) => {
 const createInvitationValidation = [
   body('membre_id').isInt({ min: 1 }).withMessage('ID du membre requis'),
   body('email').isEmail().withMessage('Email valide requis'),
-  body('role').optional().isIn(['membre', 'tresorier', 'responsable_org', 'bureau']).withMessage('Rôle invalide')
+  body('role').optional().isIn(['secretaire_general', 'adjoint', 'tresorier', 'responsable_org', 'membre']).withMessage('Rôle invalide')
 ];
 
 const acceptInvitationValidation = [

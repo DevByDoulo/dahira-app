@@ -27,6 +27,21 @@ const createInvitation = async (dahiraId, invitationData, invitedByMembreId) => 
     throw new Error('Ce membre possède déjà un compte actif');
   }
 
+  // Vérifier que l'email n'est pas déjà utilisé par un autre membre ou une invitation en attente
+  const [[{ emailCount }]] = await pool.query(
+    `SELECT (
+       SELECT COUNT(*) FROM membres WHERE email = ? AND dahira_id = ? AND id != ?
+     ) + (
+       SELECT COUNT(*) FROM invitations WHERE email = ? AND dahira_id = ? AND membre_id != ? AND statut = 'pending'
+     ) AS emailCount`,
+    [email, dahiraId, membre_id, email, dahiraId, membre_id],
+  );
+  if (emailCount > 0) {
+    const err = new Error(`L'adresse email '${email}' est déjà utilisée dans ce dahira`);
+    err.code = 'ER_DUP_EMAIL';
+    throw err;
+  }
+
   // Vérifier si une invitation active existe déjà
   const [existingInvitation] = await pool.query(
     `SELECT id FROM invitations
@@ -111,10 +126,10 @@ const acceptInvitation = async (token, userData) => {
   try {
     await connection.beginTransaction();
 
-    // Mettre à jour la fiche membre avec le mot de passe et le rôle
+    // Mettre à jour la fiche membre avec le mot de passe, le rôle et l'email si non défini
     await connection.query(
-      'UPDATE membres SET password_hash = ?, role = ?, actif = TRUE WHERE id = ?',
-      [passwordHash, invitation.role, invitation.membre_id],
+      'UPDATE membres SET password_hash = ?, role = ?, email = COALESCE(email, ?), actif = TRUE WHERE id = ?',
+      [passwordHash, invitation.role, invitation.email, invitation.membre_id],
     );
 
     await connection.query(

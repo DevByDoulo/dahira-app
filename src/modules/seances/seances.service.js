@@ -5,10 +5,10 @@ const SEANCE_FIELDS = `
   TIME_FORMAT(heure_debut, '%H:%i') AS heure,
   TIME_FORMAT(heure_debut, '%H:%i') AS heure_debut,
   TIME_FORMAT(heure_fin,   '%H:%i') AS heure_fin,
-  lieu, type, theme, description, cloturee, rappel_envoye, created_by, created_at
+  lieu, type, theme, description, photo_url, cloturee, rappel_envoye, created_by, created_at
 `;
 
-const VALID_TYPES = ['hebdomadaire', 'mensuelle', 'speciale', 'assemblee_generale'];
+const VALID_TYPES = ['dahira', 'mensuelle', 'autre'];
 
 const createSeance = async (dahiraId, seanceData) => {
   const {
@@ -128,11 +128,28 @@ const cloturerSeance = async (id, dahiraId) => {
   return rows[0];
 };
 
+const updateSeancePhoto = async (id, dahiraId, photoUrl) => {
+  const [existing] = await pool.query(
+    'SELECT id FROM seances WHERE id = ? AND dahira_id = ?',
+    [id, dahiraId]
+  );
+  if (existing.length === 0) throw new Error('Séance non trouvée');
+
+  await pool.query(
+    'UPDATE seances SET photo_url = ? WHERE id = ? AND dahira_id = ?',
+    [photoUrl, id, dahiraId]
+  );
+
+  const [rows] = await pool.query(`SELECT ${SEANCE_FIELDS} FROM seances WHERE id = ?`, [id]);
+  return rows[0];
+};
+
 module.exports = {
   createSeance,
   getAllSeances,
   getSeanceCourante,
   getSeanceById,
   updateSeance,
+  updateSeancePhoto,
   cloturerSeance,
 };

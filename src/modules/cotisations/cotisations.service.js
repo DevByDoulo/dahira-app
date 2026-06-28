@@ -342,6 +342,60 @@ const getDashboard = async (dahiraId, seanceId = null) => {
   };
 };
 
+const getMembresPendingRelance = async (dahiraId, joursMin = 3) => {
+  const [[dahira]] = await pool.query('SELECT nom FROM dahiras WHERE id = ?', [dahiraId]);
+  const [rows] = await pool.query(
+    `SELECT
+       m.id AS membre_id, m.prenom, m.nom, m.email,
+       c.id AS cotisation_id, c.montant, s.date_seance
+     FROM cotisations c
+     JOIN membres m ON c.membre_id = m.id
+     JOIN seances  s ON c.seance_id  = s.id
+     WHERE c.dahira_id = ? AND c.statut = 'pending'
+       AND c.created_at <= NOW() - INTERVAL ? DAY
+     ORDER BY m.nom, m.prenom, s.date_seance`,
+    [dahiraId, joursMin]
+  );
+
+  const grouped = new Map();
+  for (const row of rows) {
+    if (!grouped.has(row.membre_id)) {
+      grouped.set(row.membre_id, {
+        membre_id: row.membre_id,
+        prenom: row.prenom,
+        nom: row.nom,
+        email: row.email,
+        cotisations: [],
+      });
+    }
+    grouped.get(row.membre_id).cotisations.push({
+      cotisation_id: row.cotisation_id,
+      montant: row.montant,
+      date_seance: row.date_seance,
+    });
+  }
+
+  return { dahiraNom: dahira?.nom ?? 'Dahira', membres: [...grouped.values()] };
+};
+
+const getCotisationsForExport = async (dahiraId, statut = null) => {
+  let where = 'WHERE c.dahira_id = ?';
+  const params = [dahiraId];
+  if (statut) { where += ' AND c.statut = ?'; params.push(statut); }
+
+  const [[dahira]] = await pool.query('SELECT nom FROM dahiras WHERE id = ?', [dahiraId]);
+  const [rows] = await pool.query(
+    `SELECT c.id, m.nom, m.prenom, s.date_seance, c.montant, c.mode_paiement, c.statut, c.created_at
+     FROM cotisations c
+     JOIN membres m ON c.membre_id = m.id
+     JOIN seances s  ON c.seance_id  = s.id
+     ${where}
+     ORDER BY c.created_at DESC`,
+    params
+  );
+  return { dahiraNom: dahira?.nom ?? 'Dahira', cotisations: rows };
+};
+
 module.exports = {
   encaisserCotisation,
   encaisserCotisationsBatch,
@@ -351,5 +405,7 @@ module.exports = {
   validerCotisation,
   rejeterCotisation,
   getMesCotisations,
-  getDashboard
+  getDashboard,
+  getCotisationsForExport,
+  getMembresPendingRelance
 };

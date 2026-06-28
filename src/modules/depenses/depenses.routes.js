@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const {
@@ -85,9 +85,9 @@ router.use(tenantMiddleware);
  *       403:
  *         description: Accès refusé
  */
-router.post('/upload-justificatif', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), upload.single('justificatif'), uploadJustificatifController);
+router.post('/upload-justificatif', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), upload.single('justificatif'), uploadJustificatifController);
 
-router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), createDepenseValidation, createDepenseController);
+router.post('/', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), createDepenseValidation, createDepenseController);
 
 /**
  * @swagger
@@ -134,7 +134,7 @@ router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), createDepenseVal
  *       401:
  *         description: Non authentifié
  */
-router.get('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getAllDepensesController);
+router.get('/', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getAllDepensesController);
 
 /**
  * @swagger
@@ -151,7 +151,7 @@ router.get('/', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getAllDepensesCon
  *       401:
  *         description: Non authentifié
  */
-router.get('/stats', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getStatistiquesController);
+router.get('/stats', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getStatistiquesController);
 
 /**
  * @swagger
@@ -176,7 +176,7 @@ router.get('/stats', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getStatistiq
  *       404:
  *         description: Dépense non trouvée
  */
-router.get('/:id', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getDepenseByIdController);
+router.get('/:id', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getDepenseByIdController);
 
 /**
  * @swagger
@@ -225,7 +225,7 @@ router.get('/:id', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), getDepenseById
  *       404:
  *         description: Dépense non trouvée
  */
-router.put('/:id', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), updateDepenseValidation, updateDepenseController);
+router.put('/:id', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), updateDepenseValidation, updateDepenseController);
 
 /**
  * @swagger
@@ -258,7 +258,7 @@ router.put('/:id', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), updateDepenseV
  *       404:
  *         description: Dépense non trouvée
  */
-router.patch('/:id/valider', roleMiddleware(ROLES.BUREAU), validerDepenseController);
+router.patch('/:id/valider', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), validerDepenseController);
 
 /**
  * @swagger
@@ -300,7 +300,7 @@ router.patch('/:id/valider', roleMiddleware(ROLES.BUREAU), validerDepenseControl
  *       403:
  *         description: Accès refusé - Bureau uniquement
  */
-router.patch('/:id/rejeter', roleMiddleware(ROLES.BUREAU), rejeterDepenseValidation, rejeterDepenseController);
+router.patch('/:id/rejeter', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), rejeterDepenseValidation, rejeterDepenseController);
 
 /**
  * @swagger
@@ -330,6 +330,7 @@ router.patch('/:id/rejeter', roleMiddleware(ROLES.BUREAU), rejeterDepenseValidat
  *       404:
  *         description: Dépense non trouvée ou impossible à supprimer
  */
-router.delete('/:id', roleMiddleware(ROLES.BUREAU), deleteDepenseController);
+router.delete('/:id', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), deleteDepenseController);
 
 module.exports = router;
+

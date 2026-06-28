@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const {
   getAllUsersController,
@@ -57,8 +57,8 @@ const { ROLES } = require('../../constants/roles');
  *                         example: "diallo@example.com"
  *                       role:
  *                         type: string
- *                         enum: [membre, tresorier, bureau]
- *                         example: "bureau"
+ *                         enum: [membre, tresorier, secretaire_general]
+ *                         example: "secretaire_general"
  *                       actif:
  *                         type: boolean
  *                         example: true
@@ -77,9 +77,9 @@ const { ROLES } = require('../../constants/roles');
 // Routes statiques avant /:id
 router.patch('/me', authMiddleware, tenantMiddleware, updateMeController);
 router.patch('/me/preferences', authMiddleware, tenantMiddleware, updateNotificationPrefsController);
-router.get('/by-membre/:membre_id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), getUserByMembreIdController);
+router.get('/by-membre/:membre_id', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL), getUserByMembreIdController);
 
-router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), getAllUsersController);
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL), getAllUsersController);
 
 /**
  * @swagger
@@ -113,7 +113,7 @@ router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), getA
  *                 example: "password123"
  *               role:
  *                 type: string
- *                 enum: [membre, tresorier, bureau]
+ *                 enum: [membre, tresorier, secretaire_general]
  *                 example: "membre"
  *               email:
  *                 type: string
@@ -168,7 +168,7 @@ router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), getA
  *       404:
  *         description: Membre non trouvé (si membre_id fourni)
  */
-router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), createUserValidation, createUserController);
+router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL), createUserValidation, createUserController);
 
 /**
  * @swagger
@@ -203,7 +203,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), cre
  *                 example: "diallo@example.com"
  *               role:
  *                 type: string
- *                 enum: [membre, tresorier, bureau]
+ *                 enum: [membre, tresorier, secretaire_general]
  *                 example: "tresorier"
  *               membre_id:
  *                 type: integer
@@ -255,7 +255,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), cre
  *       404:
  *         description: Utilisateur ou membre non trouvé
  */
-router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), updateUserValidation, updateUserController);
+router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL), updateUserValidation, updateUserController);
 
 /**
  * @swagger
@@ -318,7 +318,9 @@ router.put('/:id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), u
  *       404:
  *         description: Utilisateur non trouvé
  */
-router.patch('/:id/desactiver', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), desactiverUserController);
-router.patch('/:id/activer', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), activerUserController);
+router.patch('/:id/desactiver', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL), desactiverUserController);
+router.patch('/:id/activer', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL), activerUserController);
 
 module.exports = router;
+
+

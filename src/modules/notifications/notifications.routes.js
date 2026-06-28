@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const {
   getUserNotificationsController,
@@ -160,7 +160,7 @@ router.delete('/:id', deleteNotificationController);
  *       403:
  *         description: Accès refusé
  */
-router.post('/notify-all', roleMiddleware(ROLES.BUREAU), notifyAllValidation, notifyAllMembersController);
+router.post('/notify-all', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), notifyAllValidation, notifyAllMembersController);
 
 /**
  * @swagger
@@ -179,7 +179,7 @@ router.post('/notify-all', roleMiddleware(ROLES.BUREAU), notifyAllValidation, no
  *       403:
  *         description: Accès refusé
  */
-router.post('/seance-reminders', roleMiddleware(ROLES.BUREAU), sendSeanceRemindersController);
+router.post('/seance-reminders', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), sendSeanceRemindersController);
 
 /**
  * @swagger
@@ -198,6 +198,7 @@ router.post('/seance-reminders', roleMiddleware(ROLES.BUREAU), sendSeanceReminde
  *       403:
  *         description: Accès refusé
  */
-router.post('/cotisation-retard', roleMiddleware(ROLES.BUREAU, ROLES.TRESORIER), sendCotisationRetardAlertsController);
+router.post('/cotisation-retard', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), sendCotisationRetardAlertsController);
 
 module.exports = router;
+

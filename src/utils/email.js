@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+﻿const nodemailer = require('nodemailer');
 require('dotenv').config();
 const { FRONTEND_URL } = require('../config/app');
 
@@ -232,10 +232,65 @@ const sendRecuEmail = async (toEmail, toName, recuNumber, pdfPath) => {
   return { success: true, messageId: info.messageId };
 };
 
+const sendRelanceEmail = async (toEmail, toName, dahiraName, cotisations) => {
+  const color = '#d97706';
+  const fmt = (n) =>
+    Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+  const fmtDate = (d) =>
+    d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+
+  const lignes = cotisations
+    .map(
+      (c) =>
+        `<tr>
+          <td style="padding:8px 12px;font-size:13px;color:#52525b;border-bottom:1px solid #f4f4f5;">${fmtDate(c.date_seance)}</td>
+          <td style="padding:8px 12px;font-size:13px;color:#52525b;border-bottom:1px solid #f4f4f5;">${fmt(c.montant)}</td>
+        </tr>`,
+    )
+    .join('');
+
+  const table = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;overflow:hidden;margin:20px 0;">
+      <thead>
+        <tr style="background:#fef9c3;">
+          <th style="padding:10px 12px;font-size:12px;color:#a16207;text-align:left;font-weight:600;">Séance</th>
+          <th style="padding:10px 12px;font-size:12px;color:#a16207;text-align:left;font-weight:600;">Montant</th>
+        </tr>
+      </thead>
+      <tbody>${lignes}</tbody>
+    </table>`;
+
+  const html = baseTemplate({
+    color,
+    title: `Rappel — Cotisation en attente`,
+    body: `
+      ${greeting(toName)}
+      ${paragraph(`Votre cotisation dans <strong>${dahiraName}</strong> est en attente de validation depuis quelques jours.`)}
+      ${table}
+      ${paragraph('Aucune action n\'est requise de votre part si vous avez déjà effectué votre paiement. Le secretaire_general procédera à la validation prochainement.')}
+      ${paragraph('Si vous n\'avez pas encore effectué votre cotisation, nous vous invitons à le faire dès que possible.')}
+      ${divider()}
+      ${signOff()}
+    `,
+  });
+
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
+    from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: `Rappel — Cotisation en attente · ${dahiraName}`,
+    html,
+  });
+
+  return { success: true, messageId: info.messageId };
+};
+
 module.exports = {
   sendInvitationEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendNotificationEmail,
   sendRecuEmail,
+  sendRelanceEmail,
 };
+

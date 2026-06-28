@@ -1,4 +1,4 @@
-const swaggerJsdoc = require('swagger-jsdoc');
+﻿const swaggerJsdoc = require('swagger-jsdoc');
 
 const options = {
   definition: {
@@ -20,7 +20,7 @@ Application complète de gestion pour les dahiras (organisations religieuses).
 
 ### 💰 Gestion Financière
 - **Cotisations** : enregistrement, validation, suivi mensuel
-- **Dépenses** : création, validation bureau, catégorisation
+- **Dépenses** : création, validation secretaire_general, catégorisation
 - **Trésorerie** : solde en temps réel, historique, prévisions
 - **Reçus** : génération automatique PDF
 
@@ -45,7 +45,7 @@ Application complète de gestion pour les dahiras (organisations religieuses).
 - JWT authentication
 - Réinitialisation mot de passe par email
 - Système d'invitations sécurisées
-- Gestion des rôles (Bureau, Trésorier, Membre)
+- Gestion des rôles (secretaire_general, Trésorier, Membre)
 
 ### 🏢 Multi-Tenant
 - Isolation complète par dahira
@@ -64,7 +64,7 @@ Consultez le README.md du projet pour plus de détails.
 
 ## 🔑 Rôles et Permissions
 
-- **Bureau** : Accès complet à toutes les fonctionnalités
+- **secretaire_general** : Accès complet à toutes les fonctionnalités
 - **Trésorier** : Gestion financière (cotisations, dépenses, trésorerie)
 - **Membre** : Consultation des données uniquement
       `,
@@ -293,7 +293,7 @@ Consultez le README.md du projet pour plus de détails.
             },
             role: {
               type: 'string',
-              enum: ['bureau', 'tresorier', 'membre'],
+              enum: ['secretaire_general', 'tresorier', 'membre'],
               example: 'membre'
             },
             actif: {
@@ -508,3 +508,4 @@ Consultez le README.md du projet pour plus de détails.
 const specs = swaggerJsdoc(options);
 
 module.exports = specs;
+

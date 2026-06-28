@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const {
   enregistrerPresenceController,
@@ -52,7 +52,7 @@ router.use(tenantMiddleware);
  *       401:
  *         description: Non authentifié
  */
-router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), presenceValidation, enregistrerPresenceController);
+router.post('/', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), presenceValidation, enregistrerPresenceController);
 
 /**
  * @swagger
@@ -85,7 +85,7 @@ router.post('/', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), presenceVa
  *       400:
  *         description: Erreur de validation
  */
-router.post('/batch', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), presencesBatchValidation, enregistrerPresencesBatchController);
+router.post('/batch', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), presencesBatchValidation, enregistrerPresencesBatchController);
 
 /**
  * @swagger
@@ -185,7 +185,7 @@ router.get('/stats', getStatistiquesGlobalesController);
  *       400:
  *         description: Erreur de validation
  */
-router.post('/absence', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), presenceValidation, marquerAbsenceController);
+router.post('/absence', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), presenceValidation, marquerAbsenceController);
 
 /**
  * @swagger
@@ -210,7 +210,7 @@ router.post('/absence', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), pre
  *       403:
  *         description: Accès refusé
  */
-router.delete('/:id', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), supprimerPresenceController);
+router.delete('/:id', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.RESPONSABLE_ORG), supprimerPresenceController);
 
 /**
  * @swagger
@@ -236,3 +236,4 @@ router.delete('/:id', roleMiddleware(ROLES.BUREAU, ROLES.RESPONSABLE_ORG), suppr
 router.get('/feuille/:seance_id', genererFeuillePresenceController);
 
 module.exports = router;
+

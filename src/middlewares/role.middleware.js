@@ -1,4 +1,4 @@
-const { error } = require('../utils/response');
+﻿const { error } = require('../utils/response');
 const { isValidRole } = require('../constants/roles');
 
 /**
@@ -11,10 +11,10 @@ const { isValidRole } = require('../constants/roles');
  * const { ROLES } = require('../constants/roles');
  * 
  * // Un seul rôle
- * router.patch('/valider', allowRoles(ROLES.BUREAU), controller);
+ * router.patch('/valider', allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), controller);
  * 
  * // Plusieurs rôles
- * router.post('/', allowRoles(ROLES.BUREAU, ROLES.TRESORIER), controller);
+ * router.post('/', allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), controller);
  */
 const allowRoles = (...allowedRoles) => {
   // Validation : vérifier que tous les rôles passés sont valides
@@ -99,3 +99,4 @@ module.exports = allowRoles;
 // Export des fonctions additionnelles
 module.exports.requirePermission = requirePermission;
 module.exports.requireAtLeast = requireAtLeast;
+

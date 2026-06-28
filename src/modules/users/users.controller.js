@@ -79,14 +79,14 @@ const createUserValidation = [
   body('password').notEmpty().withMessage('Le mot de passe est requis'),
   body('role')
     .notEmpty().withMessage('Le rôle est requis')
-    .isIn(['membre', 'tresorier', 'bureau']).withMessage('Le rôle doit être membre, tresorier ou bureau')
+    .isIn(['secretaire_general', 'adjoint', 'tresorier', 'responsable_org', 'membre']).withMessage('Rôle invalide')
 ];
 
 const updateUserValidation = [
   body('nom').notEmpty().withMessage('Le nom est requis'),
   body('role')
     .optional()
-    .isIn(['membre', 'tresorier', 'bureau']).withMessage('Le rôle doit être membre, tresorier ou bureau')
+    .isIn(['secretaire_general', 'adjoint', 'tresorier', 'responsable_org', 'membre']).withMessage('Rôle invalide')
 ];
 
 const updateMeController = async (req, res, next) => {

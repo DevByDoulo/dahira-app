@@ -40,9 +40,10 @@ app.use('/api/', limiter);
 
 // Rate limiting plus strict pour l'authentification
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limite chaque IP à 5 tentatives de connexion par 15 minutes
-  message: 'Trop de tentatives de connexion, veuillez réessayer plus tard'
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  skipSuccessfulRequests: true, // seules les tentatives échouées comptent
+  message: { success: false, message: 'Trop de tentatives de connexion. Réessayez dans 15 minutes.' },
 });
 
 // Middlewares globaux avec limites de taille

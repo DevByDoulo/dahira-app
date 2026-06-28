@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const {
   encaisserCotisationController,
@@ -10,6 +10,8 @@ const {
   rejeterCotisationController,
   getMesCotisationsController,
   getDashboardController,
+  exportPdfController,
+  relancerController,
   encaisserCotisationValidation,
   encaisserCotisationsBatchValidation,
   declarerCotisationValidation,
@@ -173,9 +175,13 @@ const { ROLES } = require('../../constants/roles');
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getAllCotisationsValidation, getAllCotisationsController);
+router.get('/export-pdf', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), exportPdfController);
 
-router.post('/encaisser', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), encaisserCotisationValidation, encaisserCotisationController);
+router.post('/relancer', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), relancerController);
+
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getAllCotisationsValidation, getAllCotisationsController);
+
+router.post('/encaisser', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), encaisserCotisationValidation, encaisserCotisationController);
 
 /**
  * @swagger
@@ -249,7 +255,7 @@ router.post('/encaisser', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUR
  *       403:
  *         description: Rôle insuffisant
  */
-router.post('/encaisser/batch', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), encaisserCotisationsBatchValidation, encaisserCotisationsBatchController);
+router.post('/encaisser/batch', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), encaisserCotisationsBatchValidation, encaisserCotisationsBatchController);
 
 /**
  * @swagger
@@ -345,7 +351,7 @@ router.post('/encaisser/batch', authMiddleware, tenantMiddleware, allowRoles(ROL
  *       404:
  *         description: Séance non trouvée
  */
-router.post('/declarer', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), declarerCotisationValidation, declarerCotisationController);
+router.post('/declarer', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), declarerCotisationValidation, declarerCotisationController);
 
 /**
  * @swagger
@@ -428,7 +434,7 @@ router.post('/declarer', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMB
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/pending', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getPendingCotisationsController);
+router.get('/pending', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getPendingCotisationsController);
 
 /**
  * @swagger
@@ -481,7 +487,7 @@ router.get('/pending', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU
  *       404:
  *         description: Cotisation non trouvée
  */
-router.patch('/:id/valider', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), validerCotisationController);
+router.patch('/:id/valider', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), validerCotisationController);
 
 /**
  * @swagger
@@ -546,7 +552,7 @@ router.patch('/:id/valider', authMiddleware, tenantMiddleware, allowRoles(ROLES.
  *       404:
  *         description: Cotisation non trouvée
  */
-router.patch('/:id/rejeter', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), rejeterCotisationValidation, rejeterCotisationController);
+router.patch('/:id/rejeter', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), rejeterCotisationValidation, rejeterCotisationController);
 
 /**
  * @swagger
@@ -621,7 +627,7 @@ router.patch('/:id/rejeter', authMiddleware, tenantMiddleware, allowRoles(ROLES.
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/mine', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.BUREAU), getMesCotisationsController);
+router.get('/mine', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, ROLES.TRESORIER, ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT), getMesCotisationsController);
 
 /**
  * @swagger
@@ -686,6 +692,7 @@ router.get('/mine', authMiddleware, tenantMiddleware, allowRoles(ROLES.MEMBRE, R
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/dashboard', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU, ROLES.TRESORIER), getDashboardValidation, getDashboardController);
+router.get('/dashboard', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getDashboardValidation, getDashboardController);
 
 module.exports = router;
+

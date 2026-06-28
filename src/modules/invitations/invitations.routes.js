@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const {
   createInvitationController,
@@ -45,7 +45,7 @@ const { ROLES } = require('../../constants/roles');
  *                 description: Email du membre
  *               role:
  *                 type: string
- *                 enum: [membre, tresorier, bureau]
+ *                 enum: [membre, tresorier, secretaire_general]
  *                 default: membre
  *                 example: "membre"
  *                 description: Rôle à attribuer au membre
@@ -63,7 +63,7 @@ router.post(
   '/',
   authMiddleware,
   tenantMiddleware,
-  allowRoles(ROLES.BUREAU, ROLES.TRESORIER),
+  allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.TRESORIER),
   createInvitationValidation,
   createInvitationController
 );
@@ -96,7 +96,7 @@ router.get(
   '/',
   authMiddleware,
   tenantMiddleware,
-  allowRoles(ROLES.BUREAU, ROLES.TRESORIER),
+  allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.TRESORIER),
   getInvitationsController
 );
 
@@ -210,7 +210,7 @@ router.patch(
   '/:id/cancel',
   authMiddleware,
   tenantMiddleware,
-  allowRoles(ROLES.BUREAU, ROLES.TRESORIER),
+  allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.TRESORIER),
   cancelInvitationController
 );
 
@@ -246,8 +246,10 @@ router.post(
   '/:id/resend',
   authMiddleware,
   tenantMiddleware,
-  allowRoles(ROLES.BUREAU, ROLES.TRESORIER),
+  allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.TRESORIER),
   resendInvitationController
 );
 
 module.exports = router;
+
+
