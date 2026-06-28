@@ -8,6 +8,7 @@ const {
   desactiverUserController,
   activerUserController,
   updateMeController,
+  updateNotificationPrefsController,
   createUserValidation,
   updateUserValidation
 } = require('./users.controller');
@@ -75,6 +76,7 @@ const { ROLES } = require('../../constants/roles');
  */
 // Routes statiques avant /:id
 router.patch('/me', authMiddleware, tenantMiddleware, updateMeController);
+router.patch('/me/preferences', authMiddleware, tenantMiddleware, updateNotificationPrefsController);
 router.get('/by-membre/:membre_id', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), getUserByMembreIdController);
 
 router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.BUREAU), getAllUsersController);

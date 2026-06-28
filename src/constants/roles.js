@@ -43,10 +43,10 @@ const ROLE_LABELS = {
     description: 'Gestion financière — cotisations, dépenses, rapports'
   },
   [ROLES.RESPONSABLE_ORG]: {
-    fr: 'Responsable Organisation',
-    en: 'Organisation Manager',
+    fr: 'Communicateur',
+    en: 'Communicator',
     level: 2,
-    description: 'Gestion des événements, séances, présences et annonces'
+    description: 'Gestion des annonces, événements et séances'
   },
   [ROLES.MEMBRE]: {
     fr: 'Membre',

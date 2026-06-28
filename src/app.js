@@ -102,6 +102,7 @@ app.use('/api/recus', require('./modules/recus/recus.routes'));
 app.use('/api/notifications', require('./modules/notifications/notifications.routes'));
 app.use('/api/depenses', require('./modules/depenses/depenses.routes'));
 app.use('/api/photos', require('./modules/photos/photos.routes'));
+app.use('/api/search', require('./modules/search/search.routes'));
 
 // Middleware de gestion des erreurs (doit être à la fin)
 app.use(errorMiddleware);
