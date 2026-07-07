@@ -196,36 +196,10 @@ const updateMe = async (userId, dahiraId, { nom, email, telephone }) => {
   );
 
   const [updated] = await pool.query(
-    'SELECT id, nom, telephone, email, role, actif, membre_id, created_at, notification_prefs FROM users WHERE id = ?',
+    'SELECT id, nom, telephone, email, role, actif, membre_id, created_at FROM users WHERE id = ?',
     [userId]
   );
-  const row = updated[0];
-  return { ...row, notification_prefs: row.notification_prefs ? JSON.parse(row.notification_prefs) : {} };
-};
-
-const updateNotificationPrefs = async (userId, dahiraId, prefs) => {
-  const whereClause = dahiraId ? 'WHERE id = ? AND dahira_id = ?' : 'WHERE id = ?';
-  const whereParams = dahiraId ? [userId, dahiraId] : [userId];
-
-  const [existing] = await pool.query(`SELECT id FROM users ${whereClause}`, whereParams);
-  if (existing.length === 0) throw new Error('Utilisateur non trouvé');
-
-  // Ensure the column exists (safe to run on every call)
-  await pool.query(
-    `ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_prefs JSON DEFAULT NULL`
-  );
-
-  await pool.query(
-    'UPDATE users SET notification_prefs = ? WHERE id = ?',
-    [JSON.stringify(prefs), userId]
-  );
-
-  const [updated] = await pool.query(
-    'SELECT id, nom, telephone, email, role, actif, membre_id, created_at, notification_prefs FROM users WHERE id = ?',
-    [userId]
-  );
-  const row = updated[0];
-  return { ...row, notification_prefs: row.notification_prefs ? JSON.parse(row.notification_prefs) : {} };
+  return updated[0];
 };
 
 module.exports = {
@@ -236,6 +210,5 @@ module.exports = {
   desactiverUser,
   activerUser,
   updateMe,
-  updateNotificationPrefs,
 };
 

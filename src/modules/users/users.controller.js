@@ -1,4 +1,4 @@
-const { getAllUsers, getUserByMembreId, createUser, updateUser, desactiverUser, activerUser, updateMe, updateNotificationPrefs } = require('./users.service');
+const { getAllUsers, getUserByMembreId, createUser, updateUser, desactiverUser, activerUser, updateMe } = require('./users.service');
 const { success, error } = require('../../utils/response');
 const { body, validationResult } = require('express-validator');
 
@@ -102,20 +102,6 @@ const updateMeController = async (req, res, next) => {
   }
 };
 
-const updateNotificationPrefsController = async (req, res, next) => {
-  try {
-    const allowed = ['notif_email_cotisation', 'notif_email_seance', 'notif_email_relance'];
-    const prefs = {};
-    for (const key of allowed) {
-      if (key in req.body) prefs[key] = !!req.body[key];
-    }
-    const user = await updateNotificationPrefs(req.user.id, req.dahira_id, prefs);
-    return success(res, user, 200);
-  } catch (err) {
-    next(err);
-  }
-};
-
 module.exports = {
   getAllUsersController,
   getUserByMembreIdController,
@@ -124,7 +110,6 @@ module.exports = {
   desactiverUserController,
   activerUserController,
   updateMeController,
-  updateNotificationPrefsController,
   createUserValidation,
   updateUserValidation,
 };

@@ -14,6 +14,7 @@ app.use(helmet());
 // Configuration CORS avec origines spécifiques
 const allowedOrigins = [
   'http://localhost:4200',
+  'http://localhost:5000', // Flutter web (dev)
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -95,15 +96,9 @@ app.use('/api/dahiras', require('./modules/dahiras/dahiras.routes'));
 app.use('/api/membres', require('./modules/membres/membres.routes'));
 app.use('/api/seances', require('./modules/seances/seances.routes'));
 app.use('/api/cotisations', require('./modules/cotisations/cotisations.routes'));
-app.use('/api/annonces', require('./modules/annonces/annonces.routes'));
-app.use('/api/evenements', require('./modules/evenements/evenements.routes'));
 app.use('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
 app.use('/api/tresorerie', require('./modules/tresorerie/tresorerie.routes'));
-app.use('/api/recus', require('./modules/recus/recus.routes'));
-app.use('/api/notifications', require('./modules/notifications/notifications.routes'));
 app.use('/api/depenses', require('./modules/depenses/depenses.routes'));
-app.use('/api/photos', require('./modules/photos/photos.routes'));
-app.use('/api/search', require('./modules/search/search.routes'));
 
 // Middleware de gestion des erreurs (doit être à la fin)
 app.use(errorMiddleware);

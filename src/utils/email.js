@@ -179,59 +179,6 @@ const sendPasswordResetEmail = async (toEmail, toName, resetLink) => {
   return { success: true, messageId: info.messageId };
 };
 
-const sendNotificationEmail = async (toEmail, title, message, link) => {
-  const color = '#2563eb';
-
-  const html = baseTemplate({
-    color,
-    title,
-    body: `
-      ${paragraph(message)}
-      ${link ? ctaLink(`${FRONTEND_URL}${link}`, 'Voir dans l\'application', color) : ''}
-      ${divider()}
-      ${signOff()}
-    `,
-  });
-
-  const transporter = createTransporter();
-  const info = await transporter.sendMail({
-    from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
-    to: toEmail,
-    subject: title,
-    html,
-  });
-
-  return { success: true, messageId: info.messageId };
-};
-
-const sendRecuEmail = async (toEmail, toName, recuNumber, pdfPath) => {
-  const color = '#0891b2';
-
-  const html = baseTemplate({
-    color,
-    title: `Reçu de cotisation — ${recuNumber}`,
-    body: `
-      ${greeting(toName)}
-      ${paragraph('Votre cotisation a été enregistrée avec succès.')}
-      ${paragraph(`Vous trouverez ci-joint votre reçu de paiement <strong>N° ${recuNumber}</strong>.`)}
-      ${divider()}
-      ${signOff()}
-    `,
-  });
-
-  const transporter = createTransporter();
-  const info = await transporter.sendMail({
-    from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
-    to: toEmail,
-    subject: `Reçu de cotisation — ${recuNumber}`,
-    html,
-    attachments: [{ filename: `${recuNumber}.pdf`, path: pdfPath }],
-  });
-
-  console.log('Reçu envoyé par email:', info.messageId);
-  return { success: true, messageId: info.messageId };
-};
-
 const sendRelanceEmail = async (toEmail, toName, dahiraName, cotisations) => {
   const color = '#d97706';
   const fmt = (n) =>
@@ -289,8 +236,6 @@ module.exports = {
   sendInvitationEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
-  sendNotificationEmail,
-  sendRecuEmail,
   sendRelanceEmail,
 };
 

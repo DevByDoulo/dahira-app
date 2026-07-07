@@ -179,16 +179,6 @@ const fichePdfController = async (req, res, next) => {
       [membreId, req.dahira_id]
     );
 
-    const [[presStats]] = await pool.query(
-      `SELECT
-         COUNT(DISTINCT s.id) AS total_seances,
-         SUM(CASE WHEN p.statut = 'present' THEN 1 ELSE 0 END) AS presents
-       FROM seances s
-       LEFT JOIN presences p ON p.seance_id = s.id AND p.membre_id = ?
-       WHERE s.dahira_id = ?`,
-      [membreId, req.dahira_id]
-    );
-
     const fmt = (n) =>
       Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
     const fmtDate = (d) =>
@@ -198,9 +188,6 @@ const fichePdfController = async (req, res, next) => {
 
     const cotisApprouvees = cotisations.filter(c => c.statut === 'approved');
     const totalCotise = cotisApprouvees.reduce((s, c) => s + Number(c.montant), 0);
-    const total = Number(presStats?.total_seances ?? 0);
-    const presents = Number(presStats?.presents ?? 0);
-    const tauxPresence = total > 0 ? Math.round((presents / total) * 100) : 0;
 
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
     res.setHeader('Content-Type', 'application/pdf');
@@ -271,9 +258,8 @@ const fichePdfController = async (req, res, next) => {
     const cards = [
       { label: 'Total cotisé',             value: fmt(totalCotise),              color: '#16a34a' },
       { label: 'Cotisations validées',      value: String(cotisApprouvees.length), color: '#0f172a' },
-      { label: 'Taux de présence',          value: `${tauxPresence} %`,           color: tauxPresence >= 70 ? '#16a34a' : tauxPresence >= 40 ? '#d97706' : '#dc2626' },
     ];
-    const cW = (W - 20) / 3;
+    const cW = (W - 10) / 2;
     cards.forEach((card, i) => {
       const x = 50 + i * (cW + 10);
       doc.rect(x, y, cW, 52).fill('#ffffff').stroke('#e2e8f0');

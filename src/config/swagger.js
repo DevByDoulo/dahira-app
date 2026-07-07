@@ -22,7 +22,6 @@ Application complète de gestion pour les dahiras (organisations religieuses).
 - **Cotisations** : enregistrement, validation, suivi mensuel
 - **Dépenses** : création, validation secretaire_general, catégorisation
 - **Trésorerie** : solde en temps réel, historique, prévisions
-- **Reçus** : génération automatique PDF
 
 ### 📊 Dashboard & Statistiques
 - Statistiques globales (membres, finances, séances)
@@ -35,11 +34,6 @@ Application complète de gestion pour les dahiras (organisations religieuses).
 - Enregistrement des présences (individuel et masse)
 - Feuilles de présence
 - Statistiques d'assiduité
-
-### 🔔 Communication
-- **Notifications** : email, in-app, rappels automatiques
-- **Annonces** : info, important, urgent
-- **Événements** : avec gestion des inscriptions
 
 ### 🔐 Sécurité & Authentification
 - JWT authentication
@@ -135,26 +129,6 @@ Consultez le README.md du projet pour plus de détails.
       {
         name: 'Présences',
         description: 'Gestion des présences aux séances'
-      },
-      {
-        name: 'Reçus',
-        description: 'Génération et envoi de reçus de cotisation'
-      },
-      {
-        name: 'Notifications',
-        description: 'Système de notifications email et in-app'
-      },
-      {
-        name: 'Annonces',
-        description: 'Gestion des annonces du dahira'
-      },
-      {
-        name: 'Événements',
-        description: 'Gestion des événements et inscriptions'
-      },
-      {
-        name: 'Photos',
-        description: 'Gestion des photos (profils, galerie)'
       }
     ],
     components: {
@@ -402,37 +376,6 @@ Consultez le README.md du projet pour plus de détails.
             cloturee: {
               type: 'boolean',
               example: false
-            }
-          }
-        },
-        Notification: {
-          type: 'object',
-          properties: {
-            id: {
-              type: 'integer'
-            },
-            user_id: {
-              type: 'integer'
-            },
-            type: {
-              type: 'string',
-              example: 'nouvelle_annonce'
-            },
-            title: {
-              type: 'string',
-              example: 'Nouvelle annonce'
-            },
-            message: {
-              type: 'string',
-              example: 'Une nouvelle annonce a été publiée'
-            },
-            is_read: {
-              type: 'boolean',
-              example: false
-            },
-            created_at: {
-              type: 'string',
-              format: 'date-time'
             }
           }
         }

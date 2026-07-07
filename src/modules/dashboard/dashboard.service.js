@@ -71,24 +71,6 @@ const getDashboardStats = async (dahiraId) => {
     [dahiraId]
   );
 
-  // Événements à venir
-  const [evenementsAVenir] = await pool.query(
-    `SELECT id, titre, date_debut, lieu
-     FROM evenements
-     WHERE dahira_id = ? AND date_debut >= NOW()
-     ORDER BY date_debut ASC
-     LIMIT 5`,
-    [dahiraId]
-  );
-
-  // Nombre total d'événements à venir (sans LIMIT)
-  const [evenementsTotal] = await pool.query(
-    `SELECT COUNT(*) as count
-     FROM evenements
-     WHERE dahira_id = ? AND date_debut >= NOW()`,
-    [dahiraId]
-  );
-
   // Invitations en attente
   const [invitations] = await pool.query(
     `SELECT COUNT(*) as count
@@ -112,16 +94,6 @@ const getDashboardStats = async (dahiraId) => {
      GROUP BY m.id, m.nom, m.prenom, m.photo_url
      ORDER BY total_montant DESC
      LIMIT 5`,
-    [dahiraId]
-  );
-
-  // Annonces récentes
-  const [annonces] = await pool.query(
-    `SELECT id, titre, created_at
-     FROM annonces
-     WHERE dahira_id = ?
-     ORDER BY created_at DESC
-     LIMIT 3`,
     [dahiraId]
   );
 
@@ -153,11 +125,8 @@ const getDashboardStats = async (dahiraId) => {
       prochaine: prochaineSeance[0] || null,
       derniere: derniereSeance[0] || null
     },
-    evenements_a_venir: evenementsAVenir,
-    evenements_a_venir_count: evenementsTotal[0].count,
     invitations_en_attente: invitations[0].count,
-    top_contributeurs: topContributeurs,
-    annonces_recentes: annonces
+    top_contributeurs: topContributeurs
   };
 };
 
@@ -241,18 +210,8 @@ const getRecentActivity = async (dahiraId, limit = 10) => {
     [dahiraId]
   );
 
-  // Annonces récentes
-  const [annonces] = await pool.query(
-    `SELECT 'annonce' as type, id, created_at, titre
-     FROM annonces
-     WHERE dahira_id = ?
-     ORDER BY created_at DESC
-     LIMIT 5`,
-    [dahiraId]
-  );
-
   // Fusionner et trier
-  activities.push(...cotisations, ...nouveauxMembres, ...annonces);
+  activities.push(...cotisations, ...nouveauxMembres);
   activities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   return activities.slice(0, limit);

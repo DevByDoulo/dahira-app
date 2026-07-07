@@ -52,7 +52,7 @@ router.get('/charts', getDashboardChartsController);
  * /api/dashboard/activity:
  *   get:
  *     summary: Récupérer l'activité récente
- *     description: Liste des dernières activités (cotisations, nouveaux membres, annonces)
+ *     description: Liste des dernières activités (cotisations, nouveaux membres)
  *     tags: [Dashboard]
  *     security:
  *       - bearerAuth: []
