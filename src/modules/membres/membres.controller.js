@@ -184,7 +184,7 @@ const fichePdfController = async (req, res, next) => {
     const fmtDate = (d) =>
       d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
     const modeLabel = { especes: 'Espèces', wave: 'Wave', orange_money: 'Orange Money' };
-    const roleLabel = { secretaire_general: 'Secrétaire Général', adjoint: 'Adjoint', tresorier: 'Trésorier', membre: 'Membre', responsable_org: 'Responsable' };
+    const roleLabel = { secretaire_general: 'Secrétaire Général', adjoint: 'Adjoint', tresorier: 'Trésorier', membre: 'Membre', responsable_org: 'Communicateur' };
 
     const cotisApprouvees = cotisations.filter(c => c.statut === 'approved');
     const totalCotise = cotisApprouvees.reduce((s, c) => s + Number(c.montant), 0);

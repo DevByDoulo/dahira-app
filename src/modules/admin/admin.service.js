@@ -9,17 +9,17 @@ const getStats = async () => {
     FROM dahiras
   `);
 
-  const [[userStats]] = await pool.query(`
-    SELECT COUNT(*) AS total_users
+  const [[membreStats]] = await pool.query(`
+    SELECT COUNT(*) AS total_membres
     FROM membres
-    WHERE role != 'super_admin' AND password_hash IS NOT NULL
+    WHERE role != 'super_admin' AND actif = 1
   `);
 
   return {
     total_dahiras:    Number(dahiraStats.total_dahiras),
     dahiras_actifs:   Number(dahiraStats.dahiras_actifs   ?? 0),
     dahiras_inactifs: Number(dahiraStats.dahiras_inactifs ?? 0),
-    total_users:      Number(userStats.total_users),
+    total_membres:    Number(membreStats.total_membres),
   };
 };
 
