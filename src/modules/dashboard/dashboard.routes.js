@@ -8,10 +8,15 @@ const {
 } = require('./dashboard.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const tenantMiddleware = require('../../middlewares/tenant.middleware');
+const allowRoles = require('../../middlewares/role.middleware');
+const { ROLES } = require('../../constants/roles');
 
-// Toutes les routes nécessitent authentification
+// Toutes les routes nécessitent authentification.
+// Les statistiques exposent des données financières du dahira : accès réservé
+// au bureau (le frontend n'affiche ces données qu'à ces rôles).
 router.use(authMiddleware);
 router.use(tenantMiddleware);
+router.use(allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER));
 
 /**
  * @swagger
