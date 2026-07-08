@@ -1,3 +1,7 @@
+> ⚠️ **Document historique (juillet 2026)** — décrit un système supprimé
+> (`PERMISSIONS`, `requirePermission`, `requireAtLeast`, rôle `bureau`).
+> Référence à jour : [ROLES_GUIDE.md](./ROLES_GUIDE.md).
+
 # ✅ Migration Complète du Système de Rôles
 
 ## 🎉 Résumé

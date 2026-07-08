@@ -1,3 +1,7 @@
+> ⚠️ **Document historique (juillet 2026)** — décrit un système supprimé
+> (`PERMISSIONS`, `requirePermission`, `requireAtLeast`, rôle `bureau`).
+> Référence à jour : [ROLES_GUIDE.md](./ROLES_GUIDE.md).
+
 # 📚 Exemples d'Utilisation du Système de Rôles
 
 Ce document présente des exemples concrets d'utilisation du système de rôles amélioré.
