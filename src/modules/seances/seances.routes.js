@@ -142,7 +142,7 @@ router.post('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_G
  *       403:
  *         description: Rôle insuffisant
  */
-router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER, ROLES.MEMBRE), getAllSeancesValidation, getAllSeancesController);
+router.get('/', authMiddleware, tenantMiddleware, allowRoles(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG, ROLES.MEMBRE), getAllSeancesValidation, getAllSeancesController);
 
 /**
  * @swagger

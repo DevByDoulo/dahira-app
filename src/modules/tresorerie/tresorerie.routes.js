@@ -34,7 +34,8 @@ router.use(tenantMiddleware);
  *       403:
  *         description: Accès refusé
  */
-router.get('/solde', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER), getSoldeController);
+// Lecture seule ouverte à tous les rôles du dahira (affichage du solde sur « Gestion financière »)
+router.get('/solde', roleMiddleware(ROLES.SECRETAIRE_GENERAL, ROLES.ADJOINT, ROLES.TRESORIER, ROLES.RESPONSABLE_ORG, ROLES.MEMBRE), getSoldeController);
 
 /**
  * @swagger
