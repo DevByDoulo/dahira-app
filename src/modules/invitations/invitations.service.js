@@ -71,18 +71,18 @@ const createInvitation = async (dahiraId, invitationData, invitedByMembreId) => 
   const baseUrl = FRONTEND_URL;
   const invitationLink = `${baseUrl}/accepter-invitation?token=${token}`;
 
-  try {
-    await sendInvitationEmail(
-      email,
-      `${membre[0].prenom || ''} ${membre[0].nom}`.trim(),
-      invitationLink,
-      dahiraName,
-      inviterName,
-    );
-  } catch (emailError) {
+  // Envoi en arrière-plan : la réponse HTTP ne doit pas attendre le SMTP.
+  // En cas d'échec, l'invitation est supprimée pour permettre une nouvelle tentative.
+  sendInvitationEmail(
+    email,
+    `${membre[0].prenom || ''} ${membre[0].nom}`.trim(),
+    invitationLink,
+    dahiraName,
+    inviterName,
+  ).catch(async (emailError) => {
+    console.error("Échec de l'envoi de l'email d'invitation:", emailError.message);
     await pool.query('DELETE FROM invitations WHERE id = ?', [result.insertId]);
-    throw new Error("Impossible d'envoyer l'email d'invitation. Vérifiez l'adresse email.");
-  }
+  });
 
   const [newInvitation] = await pool.query(
     'SELECT id, dahira_id, membre_id, email, role, token, expires_at, invited_by, statut, created_at FROM invitations WHERE id = ?',
@@ -226,13 +226,16 @@ const resendInvitation = async (invitationId, dahiraId) => {
   const baseUrl = FRONTEND_URL;
   const invitationLink = `${baseUrl}/accepter-invitation?token=${newToken}`;
 
-  await sendInvitationEmail(
+  // Envoi en arrière-plan : la réponse HTTP ne doit pas attendre le SMTP
+  sendInvitationEmail(
     invitation.email,
     `${invitation.membre_prenom || ''} ${invitation.membre_nom}`.trim(),
     invitationLink,
     invitation.dahira_nom,
     invitation.inviter_name || 'Un responsable',
-  );
+  ).catch((err) => {
+    console.error("Échec du renvoi de l'email d'invitation:", err.message);
+  });
 
   const [updated] = await pool.query('SELECT * FROM invitations WHERE id = ?', [invitationId]);
   return { ...updated[0], invitation_link: invitationLink };

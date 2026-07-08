@@ -34,7 +34,10 @@ const requestPasswordReset = async (telephone) => {
   const baseUrl = FRONTEND_URL;
   const resetLink = `${baseUrl}/nouveau-mot-de-passe?token=${token}`;
 
-  await sendPasswordResetEmail(membre.email, membre.nom, resetLink);
+  // Envoi en arrière-plan : la réponse HTTP ne doit pas attendre le SMTP
+  sendPasswordResetEmail(membre.email, membre.nom, resetLink).catch((err) => {
+    console.error("Échec de l'envoi de l'email de réinitialisation:", err.message);
+  });
 
   return {
     message: 'Un email de réinitialisation a été envoyé',

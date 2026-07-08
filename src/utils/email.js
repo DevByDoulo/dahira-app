@@ -2,13 +2,22 @@
 require('dotenv').config();
 const { FRONTEND_URL } = require('../config/app');
 
-const createTransporter = () =>
-  nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
+// Transporteur unique avec pool : la connexion SMTP (DNS + TLS + auth) est
+// établie une fois puis réutilisée, au lieu d'être recréée à chaque envoi.
+let transporter;
+const getTransporter = () => {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      pool: true,
+      maxConnections: 3,
+    });
+  }
+  return transporter;
+};
 
 // ── Template de base ──────────────────────────────────────────────────────────
 
@@ -109,7 +118,7 @@ const sendInvitationEmail = async (toEmail, toName, invitationLink, dahiraName, 
     `,
   });
 
-  const transporter = createTransporter();
+  const transporter = getTransporter();
   const info = await transporter.sendMail({
     from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
     to: toEmail,
@@ -137,7 +146,7 @@ const sendWelcomeEmail = async (toEmail, toName, dahiraName) => {
     `,
   });
 
-  const transporter = createTransporter();
+  const transporter = getTransporter();
   const info = await transporter.sendMail({
     from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
     to: toEmail,
@@ -167,7 +176,7 @@ const sendPasswordResetEmail = async (toEmail, toName, resetLink) => {
     `,
   });
 
-  const transporter = createTransporter();
+  const transporter = getTransporter();
   const info = await transporter.sendMail({
     from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
     to: toEmail,
@@ -221,7 +230,7 @@ const sendRelanceEmail = async (toEmail, toName, dahiraName, cotisations) => {
     `,
   });
 
-  const transporter = createTransporter();
+  const transporter = getTransporter();
   const info = await transporter.sendMail({
     from: `"${process.env.SMTP_FROM_NAME || 'Dahira App'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
     to: toEmail,
