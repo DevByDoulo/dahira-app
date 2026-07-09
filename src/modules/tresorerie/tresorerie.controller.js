@@ -33,7 +33,7 @@ const getTransactionsController = async (req, res, next) => {
       mode_paiement: req.query.mode_paiement,
       date_debut: req.query.date_debut,
       date_fin: req.query.date_fin,
-      limit: parseInt(req.query.limit) || 50,
+      limit: req.query.limit === 'all' ? 0 : parseInt(req.query.limit) || 50,
       offset: parseInt(req.query.offset) || 0
     };
 

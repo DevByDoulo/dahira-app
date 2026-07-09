@@ -59,38 +59,61 @@
   const getTransactions = async (dahiraId, filters = {}) => {
     const { type, mode_paiement, date_debut, date_fin, limit = 50, offset = 0 } = filters;
 
+    // Dates métier : created_at pour les cotisations (date d'encaissement),
+    // date_depense pour les dépenses (cohérent avec le rapport mensuel).
+    const entreeConds = ['c.dahira_id = ?', "c.statut = 'approved'"];
+    const entreeParams = [dahiraId];
+    const sortieConds = ['dahira_id = ?', "statut = 'validee'"];
+    const sortieParams = [dahiraId];
+
+    if (mode_paiement) {
+      entreeConds.push('c.mode_paiement = ?');
+      entreeParams.push(mode_paiement);
+      sortieConds.push('mode_paiement = ?');
+      sortieParams.push(mode_paiement);
+    }
+    if (date_debut) {
+      entreeConds.push('c.created_at >= ?');
+      entreeParams.push(date_debut);
+      sortieConds.push('date_depense >= ?');
+      sortieParams.push(date_debut);
+    }
+    if (date_fin) {
+      // borne de fin inclusive (jour entier)
+      entreeConds.push('c.created_at < DATE_ADD(?, INTERVAL 1 DAY)');
+      entreeParams.push(date_fin);
+      sortieConds.push('date_depense < DATE_ADD(?, INTERVAL 1 DAY)');
+      sortieParams.push(date_fin);
+    }
+
+    const selectEntrees = `
+        SELECT 'entree' as type, c.id, c.montant, c.mode_paiement, c.created_at as date,
+              'Cotisation' as description, c.membre_id, c.seance_id,
+              CONCAT(m.prenom, ' ', m.nom) as membre_nom
+        FROM cotisations c
+        LEFT JOIN membres m ON m.id = c.membre_id
+        WHERE ${entreeConds.join(' AND ')}
+      `;
+    const selectSorties = `
+        SELECT 'sortie' as type, id, montant, mode_paiement, date_depense as date,
+              description, NULL as membre_id, NULL as seance_id,
+              NULL as membre_nom
+        FROM depenses
+        WHERE ${sortieConds.join(' AND ')}
+      `;
+
     let query;
     let params;
 
     if (type === 'sortie') {
-      query = `
-        SELECT 'sortie' as type, id, montant, mode_paiement, created_at as date,
-              description, NULL as membre_id, NULL as seance_id
-        FROM depenses
-        WHERE dahira_id = ? AND statut = 'validee'
-      `;
-      params = [dahiraId];
+      query = selectSorties;
+      params = sortieParams;
     } else if (type === 'entree') {
-      query = `
-        SELECT 'entree' as type, id, montant, mode_paiement, created_at as date,
-              'Cotisation' as description, membre_id, seance_id
-        FROM cotisations
-        WHERE dahira_id = ? AND statut = 'approved'
-      `;
-      params = [dahiraId];
+      query = selectEntrees;
+      params = entreeParams;
     } else {
-      query = `
-        SELECT 'entree' as type, id, montant, mode_paiement, created_at as date,
-              'Cotisation' as description, membre_id, seance_id
-        FROM cotisations
-        WHERE dahira_id = ? AND statut = 'approved'
-        UNION ALL
-        SELECT 'sortie' as type, id, montant, mode_paiement, created_at as date,
-              description, NULL as membre_id, NULL as seance_id
-        FROM depenses
-        WHERE dahira_id = ? AND statut = 'validee'
-      `;
-      params = [dahiraId, dahiraId];
+      query = `${selectEntrees} UNION ALL ${selectSorties}`;
+      params = [...entreeParams, ...sortieParams];
     }
 
     query += ' ORDER BY date DESC';
@@ -101,64 +124,83 @@
     }
 
     const [transactions] = await pool.query(query, params);
-
-    // Enrichir avec les noms
-    for (const transaction of transactions) {
-      if (transaction.membre_id) {
-        const [membre] = await pool.query(
-          'SELECT nom, prenom FROM membres WHERE id = ?',
-          [transaction.membre_id]
-        );
-        if (membre.length > 0) {
-          transaction.membre_nom = `${membre[0].prenom} ${membre[0].nom}`;
-        }
-      }
-    }
-
     return transactions;
   };
 
   /**
-   * Évolution de la trésorerie sur une période
+   * Évolution de la trésorerie sur une période.
+   * Pour `mois` : renvoie toujours les 12 derniers mois calendaires (mois
+   * courant inclus), les mois sans activité à zéro — le graphique et les KPI
+   * « mois en cours » du frontend s'appuient sur cette continuité.
    */
   const getEvolution = async (dahiraId, periode = 'mois') => {
-    let groupBy = '';
-    let dateFormat = '';
+    if (periode !== 'jour' && periode !== 'semaine') {
+      const moisListe = [];
+      const now = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        moisListe.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+      }
+      const debut = `${moisListe[0]}-01`;
 
-    if (periode === 'jour') {
-      groupBy = 'DATE(created_at)';
-      dateFormat = '%Y-%m-%d';
-    } else if (periode === 'semaine') {
-      groupBy = 'YEARWEEK(created_at)';
-      dateFormat = '%Y-W%v';
-    } else {
-      groupBy = "DATE_FORMAT(created_at, '%Y-%m')";
-      dateFormat = '%Y-%m';
+      const [entrees] = await pool.query(
+        `SELECT DATE_FORMAT(created_at, '%Y-%m') as periode, SUM(montant) as montant
+        FROM cotisations
+        WHERE dahira_id = ? AND statut = 'approved' AND created_at >= ?
+        GROUP BY periode`,
+        [dahiraId, debut]
+      );
+
+      const [sorties] = await pool.query(
+        `SELECT DATE_FORMAT(date_depense, '%Y-%m') as periode, SUM(montant) as montant
+        FROM depenses
+        WHERE dahira_id = ? AND statut = 'validee' AND date_depense >= ?
+        GROUP BY periode`,
+        [dahiraId, debut]
+      );
+
+      const periodesMap = {};
+      moisListe.forEach(m => {
+        periodesMap[m] = { periode: m, entrees: 0, sorties: 0 };
+      });
+      entrees.forEach(e => {
+        if (periodesMap[e.periode]) periodesMap[e.periode].entrees = parseFloat(e.montant || 0);
+      });
+      sorties.forEach(s => {
+        if (periodesMap[s.periode]) periodesMap[s.periode].sorties = parseFloat(s.montant || 0);
+      });
+
+      return moisListe.map(m => ({
+        ...periodesMap[m],
+        solde: periodesMap[m].entrees - periodesMap[m].sorties
+      }));
     }
 
-    // Entrées par période
+    // jour / semaine : uniquement les périodes ayant des transactions
+    const groupByEntrees = periode === 'jour' ? 'DATE(created_at)' : 'YEARWEEK(created_at)';
+    const groupBySorties = periode === 'jour' ? 'DATE(date_depense)' : 'YEARWEEK(date_depense)';
+    const dateFormat = periode === 'jour' ? '%Y-%m-%d' : '%Y-W%v';
+
     const [entrees] = await pool.query(
       `SELECT DATE_FORMAT(created_at, ?) as periode, SUM(montant) as montant
       FROM cotisations
       WHERE dahira_id = ? AND statut = 'approved'
-      GROUP BY ${groupBy}
+      GROUP BY ${groupByEntrees}
       ORDER BY periode DESC
       LIMIT 12`,
       [dateFormat, dahiraId]
     );
 
-    // Sorties par période
     const [sorties] = await pool.query(
-      `SELECT DATE_FORMAT(created_at, ?) as periode, SUM(montant) as montant
+      `SELECT DATE_FORMAT(date_depense, ?) as periode, SUM(montant) as montant
       FROM depenses
       WHERE dahira_id = ? AND statut = 'validee'
-      GROUP BY ${groupBy}
+      GROUP BY ${groupBySorties}
       ORDER BY periode DESC
       LIMIT 12`,
       [dateFormat, dahiraId]
     );
 
-    // Fusionner les données
     const periodesMap = {};
 
     entrees.forEach(e => {
@@ -187,37 +229,43 @@
    * Prévisions basées sur les moyennes
    */
   const getPrevisions = async (dahiraId, moisFuturs = 3) => {
-    // Calculer les moyennes sur les 6 derniers mois
+    // Calculer les moyennes mensuelles sur les 6 derniers mois.
+    // On agrège d'abord entrées et sorties par mois (GROUP BY mois) avant la
+    // moyenne, sinon les lignes à zéro de l'UNION diluent les deux moyennes.
     const [moyennes] = await pool.query(
-      `SELECT 
+      `SELECT
         AVG(entrees) as moy_entrees,
         AVG(sorties) as moy_sorties
       FROM (
-        SELECT 
-          DATE_FORMAT(created_at, '%Y-%m') as mois,
-          SUM(montant) as entrees,
-          0 as sorties
-        FROM cotisations
-        WHERE dahira_id = ? AND statut = 'approved'
-        AND created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-        GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-        
-        UNION ALL
-        
-        SELECT 
-          DATE_FORMAT(created_at, '%Y-%m') as mois,
-          0 as entrees,
-          SUM(montant) as sorties
-        FROM depenses
-        WHERE dahira_id = ? AND statut = 'validee'
-        AND created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-        GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+        SELECT mois, SUM(entrees) as entrees, SUM(sorties) as sorties
+        FROM (
+          SELECT
+            DATE_FORMAT(created_at, '%Y-%m') as mois,
+            SUM(montant) as entrees,
+            0 as sorties
+          FROM cotisations
+          WHERE dahira_id = ? AND statut = 'approved'
+          AND created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+          GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+
+          UNION ALL
+
+          SELECT
+            DATE_FORMAT(date_depense, '%Y-%m') as mois,
+            0 as entrees,
+            SUM(montant) as sorties
+          FROM depenses
+          WHERE dahira_id = ? AND statut = 'validee'
+          AND date_depense >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+          GROUP BY DATE_FORMAT(date_depense, '%Y-%m')
+        ) as flux
+        GROUP BY mois
       ) as stats`,
       [dahiraId, dahiraId]
     );
 
-    const moyEntrees = moyennes[0].moy_entrees || 0;
-    const moySorties = moyennes[0].moy_sorties || 0;
+    const moyEntrees = parseFloat(moyennes[0].moy_entrees) || 0;
+    const moySorties = parseFloat(moyennes[0].moy_sorties) || 0;
     const soldeActuel = await getSolde(dahiraId);
 
     const previsions = [];
@@ -253,20 +301,18 @@
     const solde = await getSolde(dahiraId);
     const alertes = [];
 
-    // Alerte solde faible
-    if (solde.solde_global < 50000) {
-      alertes.push({
-        type: 'warning',
-        message: 'Solde global faible (< 50 000 FCFA)',
-        priorite: 'medium'
-      });
-    }
-
+    // Alerte solde faible (une seule alerte, la plus grave)
     if (solde.solde_global < 20000) {
       alertes.push({
         type: 'danger',
         message: 'Solde global critique (< 20 000 FCFA)',
         priorite: 'high'
+      });
+    } else if (solde.solde_global < 50000) {
+      alertes.push({
+        type: 'warning',
+        message: 'Solde global faible (< 50 000 FCFA)',
+        priorite: 'medium'
       });
     }
 
@@ -282,7 +328,8 @@
     // Tendance négative sur 3 mois
     const evolution = await getEvolution(dahiraId, 'mois');
     const derniersMois = evolution.slice(-3);
-    const tendanceNegative = derniersMois.every(m => m.solde < 0);
+    const tendanceNegative =
+      derniersMois.length === 3 && derniersMois.every(m => m.solde < 0);
 
     if (tendanceNegative) {
       alertes.push({
